@@ -1,4 +1,4 @@
-module users
+module github.com/laaksomavrick/twitter-go
 
 go 1.12
 

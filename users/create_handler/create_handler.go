@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/laaksomavrick/twitter-go/common"
 )
 
 type createUserDto struct {
@@ -17,10 +18,12 @@ type createUserDto struct {
 	PasswordConfirmation string `json:"passwordConfirmation"`
 }
 
-func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+// Can this take the createUserDto directly as an arg?
+func Handler(ctx context.Context, event common.Event) (events.APIGatewayProxyResponse, error) {
 	var buf bytes.Buffer
 	var dto createUserDto
 
+	// does this replace the usage of a validator?
 	decoder := json.NewDecoder(strings.NewReader(event.Body))
 
 	err := decoder.Decode(&dto)

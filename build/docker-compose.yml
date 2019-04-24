@@ -1,0 +1,29 @@
+version: "3"
+services:
+  cassandra:
+    image: "cassandra:latest"
+    environment:
+      - Dcassandra.ignore_dc=true
+      - MAX_HEAP_SIZE=256M
+      - HEAP_NEWSIZE=64M
+    ports:
+      - "9042:9042"
+      - "9200:9200"
+    volumes:
+      - cassandradata:/cassandra
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    hostname: "rabbitmq"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    labels:
+      NAME: "rabbitmq1"
+
+volumes: 
+  cassandradata:

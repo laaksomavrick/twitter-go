@@ -7,4 +7,4 @@ up:
 	docker-compose -f build/docker-compose.yml up
 
 build:
-	go build -ldflags="-s -w" -o bin/hello twitter-go/hello/main.go
+	go build -ldflags="-s -w" -o bin/gateway services/gateway/cmd/main.go

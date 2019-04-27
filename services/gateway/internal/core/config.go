@@ -8,6 +8,7 @@ import (
 type Config struct {
 	Env        string
 	Port       string
+	LogLevel   string
 	HmacSecret []byte
 }
 
@@ -21,6 +22,10 @@ func NewConfig() *Config {
 
 	if os.Getenv("PORT") == "" {
 		os.Setenv("PORT", "3000")
+	}
+
+	if os.Getenv("LOG_LEVEL") == "" {
+		os.Setenv("LOG_LEVEL", "debug")
 	}
 
 	if os.Getenv("HMAC_SECRET") == "" {

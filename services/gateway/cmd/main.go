@@ -9,9 +9,9 @@ func main() {
 	// load all the required env values
 	config := core.NewConfig()
 
-	// initialize the server object
+	// initialize the gateway object
 	// values in this struct are available to all handlers
-	server := core.NewServer(core.NewRouter(), config)
+	gateway := core.NewGateway(core.NewRouter(), config)
 
 	// initialize exported routes from packages
 	routes := []core.Routes{
@@ -23,5 +23,5 @@ func main() {
 	}
 
 	// initialize the application given our routes
-	server.Init(appRoutes)
+	gateway.Init(appRoutes)
 }

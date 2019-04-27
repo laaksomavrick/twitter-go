@@ -9,37 +9,37 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Server holds the essential shared dependencies of the service
-type Server struct {
+// Gateway holds the essential shared dependencies of the service
+type Gateway struct {
 	Router *mux.Router
 	Config *Config
 }
 
-// NewServer constructs a new instance of a server
-func NewServer(router *mux.Router, config *Config) *Server {
-	return &Server{
+// NewGateway constructs a new instance of a server
+func NewGateway(router *mux.Router, config *Config) *Gateway {
+	return &Gateway{
 		Router: router,
 		Config: config,
 	}
 }
 
 // Init applies the middleware stack, registers route handlers, and serves the application
-func (s *Server) Init(routes Routes) {
+func (s *Gateway) Init(routes Routes) {
 	s.Wire(routes)
 	s.Serve()
 }
 
 // Serve serves the application :)
-func (s *Server) Serve() {
+func (s *Gateway) Serve() {
 	port := fmt.Sprintf(":%s", s.Config.Port)
 	if s.Config.Env != "testing" {
-		fmt.Printf("Server listening on port: %s\n", port)
+		fmt.Printf("Gateway listening on port: %s\n", port)
 	}
 	log.Fatal(http.ListenAndServe(port, s.Router))
 }
 
-// Wire applies middlewares to all routes and registers them to the Server.Router
-func (s *Server) Wire(routes Routes) {
+// Wire applies middlewares to all routes and registers them to the Gateway.Router
+func (s *Gateway) Wire(routes Routes) {
 	for _, route := range routes {
 		var handler http.Handler
 		handler = route.HandlerFunc(s)

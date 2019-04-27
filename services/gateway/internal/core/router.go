@@ -6,9 +6,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// ServerFunc defines the shape of handler fns on routes.
-// Server is injected for common access to routes/db/logger/etc
-type ServerFunc func(s *Server) http.HandlerFunc
+// GatewayFunc defines the shape of handler fns on routes.
+// Gateway is injected for common access to routes/db/logger/etc
+type GatewayFunc func(s *Gateway) http.HandlerFunc
 
 // Route defines the shape of a route
 type Route struct {
@@ -16,7 +16,7 @@ type Route struct {
 	Method       string
 	Pattern      string
 	AuthRequired bool
-	HandlerFunc  ServerFunc
+	HandlerFunc  GatewayFunc
 }
 
 // Routes defines the shape of an array of routes

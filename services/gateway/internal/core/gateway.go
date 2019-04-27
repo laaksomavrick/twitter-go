@@ -38,13 +38,10 @@ func (s *Gateway) Serve() {
 	log.Fatal(http.ListenAndServe(port, s.Router))
 }
 
-// Wire applies middlewares to all routes and registers them to the Gateway.Router
+// Wire applies global middlewares to all routes and registers the routes and their configuration to the Gateway.Router
 func (s *Gateway) Wire(routes Routes) {
 	for _, route := range routes {
-		var handler http.Handler
-		handler = route.HandlerFunc(s)
-		handler = CheckAuthentication(handler, route.AuthRequired, s.Config.HmacSecret)
-		handler = LogRequest(handler, route.Name, s.Config)
+		handler := Chain(route.HandlerFunc(s), CheckAuthentication(route.AuthRequired, s.Config.HmacSecret), LogRequest(route.Name, s.Config))
 
 		s.Router.
 			Methods(route.Method).
@@ -57,6 +54,5 @@ func (s *Gateway) Wire(routes Routes) {
 		methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"})
 
 		handlers.CORS(originsOk, headersOk, methodsOk)(s.Router)
-
 	}
 }

@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"twitter-go/services/common/logger"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -69,27 +70,26 @@ func LogRequest(name string, config *Config) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			lw := LogWriter{ResponseWriter: w}
+			lw := HttpLogWriter{ResponseWriter: w}
 			f(&lw, r)
 			duration := time.Since(start)
 			userID := r.Context().Value("userID")
-
-			if config.Env != "testing" {
-				// todo log to /tmp/logs ?
-				log.Printf("LOG\nHost: %s\nRemoteAddr: %s\nMethod: %s\nRequestURI: %s\nProto: %s\nStatus: %d\nContentLength: %d\nUserAgent: %s\nDuration: %s\nuserID: %d\nResBody: %s\n",
-					r.Host,
-					r.RemoteAddr,
-					r.Method,
-					r.RequestURI,
-					r.Proto,
-					lw.status,
-					lw.length,
-					r.Header.Get("User-Agent"),
-					duration,
-					userID,
-					lw.body,
-				)
+			info := logger.Loggable{
+				Caller: "LogRequest",
+				Data: map[string]interface{}{
+					"host":             r.Host,
+					"remoteAddr":       r.RemoteAddr,
+					"method":           r.Method,
+					"requestURI":       r.RequestURI,
+					"userAgent":        r.Header.Get("User-Agent"),
+					"responseDuration": duration,
+					"userID":           userID,
+					"responseBody":     string(lw.body),
+					"responseStatus":   lw.status,
+					"length":           lw.length,
+				},
 			}
+			logger.Info(info)
 		}
 	}
 }

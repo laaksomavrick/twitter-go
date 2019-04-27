@@ -5,3 +5,4 @@ github.com/gorilla/handlers v1.4.0/go.mod h1:Qkdc/uu4tH4g6mTK6auzZ766c4CA0Ng8+o/
 github.com/gorilla/mux v1.7.1 h1:Dw4jY2nghMMRsh1ol8dv1axHkDwMQK2DHerMNJsIpJU=
 github.com/gorilla/mux v1.7.1/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
 github.com/laaksomavrick/twitter-go v0.0.0-20190424234031-df205316dc37 h1:Cumwdr6ccsnToh6e1AxgJixM7XoTVjOsjQPds4X/g/s=
+github.com/laaksomavrick/twitter-go v0.0.0-20190426015520-9ff312a49bc6 h1:bmoA5IMqOaakWlP45uUfeLZxAIWnaZ+Y0LS9i1YXsa8=

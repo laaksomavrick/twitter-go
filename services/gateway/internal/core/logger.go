@@ -2,8 +2,8 @@ package core
 
 import "net/http"
 
-// LogWriter writes logs
-type LogWriter struct {
+// HttpLogWriter writes logs
+type HttpLogWriter struct {
 	http.ResponseWriter
 	status int
 	length int
@@ -11,12 +11,12 @@ type LogWriter struct {
 }
 
 // WriteHeader writes to an response's header
-func (w *LogWriter) WriteHeader(status int) {
+func (w *HttpLogWriter) WriteHeader(status int) {
 	w.status = status
 	w.ResponseWriter.WriteHeader(status)
 }
 
-func (w *LogWriter) Write(body []byte) (int, error) {
+func (w *HttpLogWriter) Write(body []byte) (int, error) {
 	if w.status == 0 {
 		w.status = 200
 	}

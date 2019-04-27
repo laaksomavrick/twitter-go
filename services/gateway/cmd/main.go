@@ -3,6 +3,7 @@ package main
 import (
 	"twitter-go/services/gateway/internal/core"
 	"twitter-go/services/gateway/internal/hello"
+	"twitter-go/services/gateway/internal/users"
 )
 
 func main() {
@@ -16,6 +17,7 @@ func main() {
 	// initialize exported routes from packages
 	routes := []core.Routes{
 		hello.Routes,
+		users.Routes,
 	}
 	var appRoutes []core.Route
 	for _, r := range routes {

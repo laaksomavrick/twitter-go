@@ -2,7 +2,7 @@ package hello
 
 import "twitter-go/services/gateway/internal/core"
 
-// Routes defines the shape of all the routes for the healthz package
+// Routes defines the shape of all the routes for the hello package
 var Routes = core.Routes{
 	core.Route{
 		Name:         "Hello",

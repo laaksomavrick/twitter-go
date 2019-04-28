@@ -6,3 +6,5 @@ github.com/gorilla/mux v1.7.1 h1:Dw4jY2nghMMRsh1ol8dv1axHkDwMQK2DHerMNJsIpJU=
 github.com/gorilla/mux v1.7.1/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
 github.com/laaksomavrick/twitter-go v0.0.0-20190424234031-df205316dc37 h1:Cumwdr6ccsnToh6e1AxgJixM7XoTVjOsjQPds4X/g/s=
 github.com/laaksomavrick/twitter-go v0.0.0-20190426015520-9ff312a49bc6 h1:bmoA5IMqOaakWlP45uUfeLZxAIWnaZ+Y0LS9i1YXsa8=
+github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94 h1:0ngsPmuP6XIjiFRNFYlvKwSr5zff2v+uPHaffZ6/M4k=
+github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=

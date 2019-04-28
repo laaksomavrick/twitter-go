@@ -2,8 +2,12 @@ package users
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"twitter-go/services/gateway/internal/core"
+
+	"twitter-go/services/common/amqp"
 )
 
 // CreateHandler handles creating a new user.
@@ -23,8 +27,29 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 
 		// TODO: amqp to the presently non-existent user service :)
 
-		json.NewEncoder(w).Encode(map[string]string{
-			"hello": "world",
-		})
+		client, err := amqp.NewClient("amqp://rabbitmq:rabbitmq@localhost:5672")
+		if err != nil {
+			log.Fatalf("%s", err)
+		}
+
+		res, err := client.SendRPC("rpc_queue", map[string]interface{}{"number": 3})
+		if err != nil {
+			log.Fatalf("%s", err)
+		}
+
+		fmt.Println(res)
+
+		fmtRes := make(map[string]interface{})
+		if err := json.Unmarshal(res, &fmtRes); err != nil {
+			log.Fatalf("%s", err)
+		}
+
+		json.NewEncoder(w).Encode(fmtRes)
+	}
+}
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
 	}
 }

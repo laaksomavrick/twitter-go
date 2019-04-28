@@ -15,8 +15,9 @@ var logLevelMappingTable = map[string]int{
 
 // Loggable defines the shape of a message output to std
 type Loggable struct {
-	Caller string
-	Data   map[string]interface{}
+	Caller  string
+	Message string
+	Data    map[string]interface{}
 }
 
 // Debug logs loggable data with a level of debug
@@ -45,6 +46,12 @@ func logForLevel(logLevel string, loggable Loggable) {
 	logLevelInt := logLevelMappingTable[logLevel]
 	if envLogLevelInt <= logLevelInt {
 		json, _ := json.MarshalIndent(loggable.Data, "", "\t")
-		log.Printf("%s\nCaller: %s\n%+v\n", logLevel, loggable.Caller, string(json))
+		log.Printf(
+			"%s\nCaller: %s\nMessage: %s\n%+v\n",
+			logLevel,
+			loggable.Caller,
+			loggable.Message,
+			string(json),
+		)
 	}
 }

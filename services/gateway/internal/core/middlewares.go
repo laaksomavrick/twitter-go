@@ -75,8 +75,7 @@ func LogRequest(name string, config *Config) Middleware {
 			duration := time.Since(start)
 			userID := r.Context().Value("userID")
 			info := logger.Loggable{
-				Caller:  "LogRequest",
-				Message: "An http request occurred",
+				Caller: "LogRequest",
 				Data: map[string]interface{}{
 					"host":             r.Host,
 					"remoteAddr":       r.RemoteAddr,

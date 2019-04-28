@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"twitter-go/services/common/amqp"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -13,12 +14,14 @@ import (
 type Gateway struct {
 	Router *mux.Router
 	Config *Config
+	Amqp   *amqp.Client
 }
 
 // NewGateway constructs a new instance of a server
-func NewGateway(router *mux.Router, config *Config) *Gateway {
+func NewGateway(router *mux.Router, amqp *amqp.Client, config *Config) *Gateway {
 	return &Gateway{
 		Router: router,
+		Amqp:   amqp,
 		Config: config,
 	}
 }

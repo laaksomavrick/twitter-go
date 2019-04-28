@@ -19,6 +19,8 @@ type ErrorsResponse struct {
 	Errors map[string]interface{} `json:"errors"`
 }
 
+// TODO: unify err and errs response
+
 // EncodeJSONError issues an ErrorResponse payload to the client
 func EncodeJSONError(w http.ResponseWriter, err error, status int) {
 	errResp := &ErrorResponse{

@@ -2,12 +2,10 @@ package users
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
+	"errors"
 	"net/http"
+	"twitter-go/services/common/logger"
 	"twitter-go/services/gateway/internal/core"
-
-	"twitter-go/services/common/amqp"
 )
 
 // CreateHandler handles creating a new user.
@@ -17,7 +15,8 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 
 		defer r.Body.Close()
 		if err := json.NewDecoder(r.Body).Decode(createUserDto); err != nil {
-			panic(err)
+			core.EncodeJSONError(w, errors.New("Bad request sent"), http.StatusBadRequest)
+			return
 		}
 
 		if errs := createUserDto.Validate(); len(errs) > 0 {
@@ -25,31 +24,41 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		// TODO: amqp to the presently non-existent user service :)
-
-		client, err := amqp.NewClient("amqp://rabbitmq:rabbitmq@localhost:5672")
+		res, err := s.Amqp.RPCRequest("rpc_queue", createUserDto)
 		if err != nil {
-			log.Fatalf("%s", err)
+			handleError(
+				w,
+				err,
+				"Users.CreateHandler",
+				"An error occurred sending an rpc request",
+				http.StatusInternalServerError,
+			)
+			return
 		}
 
-		res, err := client.SendRPC("rpc_queue", map[string]interface{}{"number": 3})
-		if err != nil {
-			log.Fatalf("%s", err)
+		user := make(map[string]interface{})
+		if err := json.Unmarshal(res, &user); err != nil {
+			handleError(
+				w,
+				err,
+				"Users.CreateHandler",
+				"An error occurred processing an rpc response",
+				http.StatusInternalServerError,
+			)
+			return
 		}
 
-		fmt.Println(res)
-
-		fmtRes := make(map[string]interface{})
-		if err := json.Unmarshal(res, &fmtRes); err != nil {
-			log.Fatalf("%s", err)
-		}
-
-		json.NewEncoder(w).Encode(fmtRes)
+		json.NewEncoder(w).Encode(user)
 	}
 }
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-	}
+func handleError(w http.ResponseWriter, err error, caller string, msg string, status int) {
+	logger.Error(logger.Loggable{
+		Caller:  caller,
+		Message: msg,
+		Data: map[string]interface{}{
+			"error": err.Error(),
+		},
+	})
+	core.EncodeJSONError(w, err, status)
 }

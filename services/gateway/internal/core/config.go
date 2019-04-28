@@ -8,6 +8,8 @@ import (
 type Config struct {
 	Env        string
 	Port       string
+	AmqpURL    string
+	AmqpPort   string
 	LogLevel   string
 	HmacSecret []byte
 }
@@ -22,6 +24,14 @@ func NewConfig() *Config {
 
 	if os.Getenv("PORT") == "" {
 		os.Setenv("PORT", "3000")
+	}
+
+	if os.Getenv("AMQP_URL") == "" {
+		os.Setenv("AMQP_URL", "amqp://rabbitmq:rabbitmq@localhost")
+	}
+
+	if os.Getenv("AMQP_PORT") == "" {
+		os.Setenv("AMQP_PORT", "5672")
 	}
 
 	if os.Getenv("LOG_LEVEL") == "" {
@@ -43,6 +53,9 @@ func NewConfig() *Config {
 	return &Config{
 		Env:        os.Getenv("GO_ENV"),
 		Port:       os.Getenv("PORT"),
+		AmqpURL:    os.Getenv("AMQP_URL"),
+		AmqpPort:   os.Getenv("AMQP_PORT"),
+		LogLevel:   os.Getenv("LOG_LEVEL"),
 		HmacSecret: []byte(os.Getenv("HMAC_SECRET")),
 	}
 }

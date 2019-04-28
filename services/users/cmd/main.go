@@ -8,11 +8,11 @@ import (
 
 func main() {
 	log.Print("Users started")
-	client, err := amqp.NewClient("amqp://rabbitmq:rabbitmq@localhost:5672")
+	client, err := amqp.NewClient("amqp://rabbitmq:rabbitmq@localhost", "5672")
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	client.ConsumeRPC("rpc_queue", func(msg []byte) interface{} {
+	client.RPCReply("rpc_queue", func(msg []byte) interface{} {
 		fmt.Print("replying")
 		return map[string]interface{}{
 			"hello": "from rpc :)",

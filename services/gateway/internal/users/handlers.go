@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/logger"
 	"twitter-go/services/gateway/internal/core"
 )
@@ -24,7 +25,7 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		res, err := s.Amqp.RPCRequest("twtr.user.create", createUserDto)
+		res, err := s.Amqp.RPCRequest(amqp.CreateUserKey, createUserDto)
 		if err != nil {
 			handleError(
 				w,

@@ -1,21 +1,22 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"twitter-go/services/common/amqp"
+	"twitter-go/services/users/internal/core"
 )
 
 func main() {
-	log.Print("Users started")
-	client, err := amqp.NewClient("amqp://rabbitmq:rabbitmq@localhost", "5672")
+	config := core.NewConfig()
+
+	amqp, err := amqp.NewClient(config.AmqpURL, config.AmqpPort)
 	if err != nil {
-		log.Fatalf("%s", err)
+		panic(err)
 	}
-	client.RPCReply("rpc_queue", func(msg []byte) interface{} {
-		fmt.Print("replying")
-		return map[string]interface{}{
-			"hello": "from rpc :)",
-		}
-	})
+
+	users := core.NewUsers(amqp, config)
+
+	users.Init()
+
+	forever := make(chan bool)
+	<-forever
 }

@@ -97,6 +97,7 @@ func (client *Client) RPCRequest(routingKey string, payload interface{}) (res []
 
 	for d := range client.replyToDelivery {
 		if corrID == d.CorrelationId {
+			// TODO-1: if d.Body == nil { err! } ???
 			res = d.Body
 			break
 		}
@@ -167,8 +168,6 @@ func (client *Client) RPCReply(routingKey string, callback func([]byte) interfac
 		return
 	}
 
-	forever := make(chan bool)
-
 	go func() {
 		for d := range msgs {
 			payload := callback(d.Body)
@@ -213,6 +212,4 @@ func (client *Client) RPCReply(routingKey string, callback func([]byte) interfac
 			d.Ack(false)
 		}
 	}()
-
-	<-forever
 }

@@ -1,4 +1,4 @@
-.PHONY: migrate up build
+.PHONY: migrate up build format
 
 migrate:
 	./scripts/migrate.sh
@@ -8,3 +8,6 @@ up:
 
 build:
 	go build -ldflags="-s -w" -o bin/gateway services/gateway/cmd/main.go
+
+format:
+	./scripts/gofmt.sh

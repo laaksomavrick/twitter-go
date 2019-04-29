@@ -1,36 +1,44 @@
 package core
 
 import (
-	"fmt"
+	"log"
 	"twitter-go/services/common/amqp"
-	"twitter-go/services/users/internal/users"
+	"twitter-go/services/common/cassandra"
 )
 
 // Users holds the essential shared dependencies of the service
 type Users struct {
-	Config *UsersConfig
-	Amqp   *amqp.Client
+	Config    *UsersConfig
+	Amqp      *amqp.Client
+	Cassandra *cassandra.Client
 }
 
-func NewUsers(amqp *amqp.Client, config *UsersConfig) *Users {
+func NewUsers(amqp *amqp.Client, cassandra *cassandra.Client, config *UsersConfig) *Users {
 	return &Users{
-		Amqp:   amqp,
-		Config: config,
+		Amqp:      amqp,
+		Cassandra: cassandra,
+		Config:    config,
 	}
 }
 
-func (u *Users) Init() {
-	u.Wire()
+func (u *Users) Init(repliers Repliers) {
+	u.Wire(repliers)
 	u.Serve()
 }
 
 func (u *Users) Serve() {
 	// TODO: serve metrics
 	if u.Config.Env != "testing" {
-		fmt.Println("Users listening")
+		log.Println("Users listening")
 	}
+
+	forever := make(chan bool)
+	<-forever
 }
 
-func (u *Users) Wire() {
-	u.Amqp.RPCReply(amqp.CreateUserKey, users.CreateUser)
+func (u *Users) Wire(repliers Repliers) {
+	for _, replier := range repliers {
+		u.Amqp.RPCReply(replier.RoutingKey, replier.Handler(u))
+	}
+	// u.Amqp.RPCReply(amqp.CreateUserKey, users.CreateUser)
 }

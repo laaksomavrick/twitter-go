@@ -2,21 +2,27 @@ package main
 
 import (
 	"twitter-go/services/common/amqp"
+	"twitter-go/services/common/cassandra"
 	"twitter-go/services/users/internal/core"
+	"twitter-go/services/users/internal/users"
 )
 
 func main() {
 	config := core.NewConfig()
 
 	amqp, err := amqp.NewClient(config.AmqpURL, config.AmqpPort)
+
 	if err != nil {
 		panic(err)
 	}
 
-	users := core.NewUsers(amqp, config)
+	cassandra, err := cassandra.NewClient(config.CassandraURL, config.CassandraKeyspace)
 
-	users.Init()
+	if err != nil {
+		panic(err)
+	}
 
-	forever := make(chan bool)
-	<-forever
+	service := core.NewUsers(amqp, cassandra, config)
+
+	service.Init(users.Repliers)
 }

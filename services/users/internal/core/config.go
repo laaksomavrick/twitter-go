@@ -8,6 +8,8 @@ import (
 // UsersConfig defines the shape of the configuration values used in the users service
 type UsersConfig struct {
 	*config.Config
+	CassandraURL      string
+	CassandraKeyspace string
 }
 
 // NewConfig returns the default configuration values used across the api
@@ -34,6 +36,14 @@ func NewConfig() *UsersConfig {
 		os.Setenv("LOG_LEVEL", "debug")
 	}
 
+	if os.Getenv("CASSANDRA_URL") == "" {
+		os.Setenv("CASSANDRA_URL", "127.0.0.1")
+	}
+
+	if os.Getenv("CASSANDRA_KEYSPACE") == "" {
+		os.Setenv("CASSANDRA_KEYSPACE", "twtr")
+	}
+
 	return &UsersConfig{
 		Config: &config.Config{
 			Env:      os.Getenv("GO_ENV"),
@@ -42,5 +52,7 @@ func NewConfig() *UsersConfig {
 			AmqpPort: os.Getenv("AMQP_PORT"),
 			LogLevel: os.Getenv("LOG_LEVEL"),
 		},
+		CassandraURL:      os.Getenv("CASSANDRA_URL"),
+		CassandraKeyspace: os.Getenv("CASSANDRA_KEYSPACE"),
 	}
 }

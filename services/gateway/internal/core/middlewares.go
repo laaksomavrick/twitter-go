@@ -66,7 +66,7 @@ func CheckAuthentication(authRequired bool, hmacSecret []byte) Middleware {
 }
 
 // LogRequest writes request and response metadata to std output
-func LogRequest(name string, config *Config) Middleware {
+func LogRequest(name string) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()

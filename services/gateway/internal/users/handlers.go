@@ -24,7 +24,7 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		res, err := s.Amqp.RPCRequest("rpc_queue", createUserDto)
+		res, err := s.Amqp.RPCRequest("twtr.user.create", createUserDto)
 		if err != nil {
 			handleError(
 				w,

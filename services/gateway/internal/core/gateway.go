@@ -12,17 +12,17 @@ import (
 
 // Gateway holds the essential shared dependencies of the service
 type Gateway struct {
-	Router *mux.Router
-	Config *Config
-	Amqp   *amqp.Client
+	Router        *mux.Router
+	GatewayConfig *GatewayConfig
+	Amqp          *amqp.Client
 }
 
 // NewGateway constructs a new instance of a server
-func NewGateway(router *mux.Router, amqp *amqp.Client, config *Config) *Gateway {
+func NewGateway(router *mux.Router, amqp *amqp.Client, config *GatewayConfig) *Gateway {
 	return &Gateway{
-		Router: router,
-		Amqp:   amqp,
-		Config: config,
+		Router:        router,
+		Amqp:          amqp,
+		GatewayConfig: config,
 	}
 }
 
@@ -34,8 +34,8 @@ func (s *Gateway) Init(routes Routes) {
 
 // Serve serves the application :)
 func (s *Gateway) Serve() {
-	port := fmt.Sprintf(":%s", s.Config.Port)
-	if s.Config.Env != "testing" {
+	port := fmt.Sprintf(":%s", s.GatewayConfig.Port)
+	if s.GatewayConfig.Env != "testing" {
 		fmt.Printf("Gateway listening on port: %s\n", port)
 	}
 	log.Fatal(http.ListenAndServe(port, s.Router))
@@ -44,7 +44,7 @@ func (s *Gateway) Serve() {
 // Wire applies global middlewares to all routes and registers the routes and their configuration to the Gateway.Router
 func (s *Gateway) Wire(routes Routes) {
 	for _, route := range routes {
-		handler := Chain(route.HandlerFunc(s), CheckAuthentication(route.AuthRequired, s.Config.HmacSecret), LogRequest(route.Name, s.Config))
+		handler := Chain(route.HandlerFunc(s), CheckAuthentication(route.AuthRequired, s.GatewayConfig.HmacSecret), LogRequest(route.Name))
 
 		s.Router.
 			Methods(route.Method).

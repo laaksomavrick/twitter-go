@@ -2,20 +2,17 @@ package core
 
 import (
 	"os"
+	"twitter-go/services/common/config"
 )
 
-// Config defines the shape of the configuration values used across the api
-type Config struct {
-	Env        string
-	Port       string
-	AmqpURL    string
-	AmqpPort   string
-	LogLevel   string
+// GatewayConfig defines the shape of the configuration values used across the api
+type GatewayConfig struct {
+	*config.Config
 	HmacSecret []byte
 }
 
 // NewConfig returns the default configuration values used across the api
-func NewConfig() *Config {
+func NewConfig() *GatewayConfig {
 	// set defaults - these can be overwritten via command line
 
 	if os.Getenv("GO_ENV") == "" {
@@ -50,12 +47,14 @@ func NewConfig() *Config {
 		os.Setenv("HMAC_SECRET", "hmacsecret")
 	}
 
-	return &Config{
-		Env:        os.Getenv("GO_ENV"),
-		Port:       os.Getenv("PORT"),
-		AmqpURL:    os.Getenv("AMQP_URL"),
-		AmqpPort:   os.Getenv("AMQP_PORT"),
-		LogLevel:   os.Getenv("LOG_LEVEL"),
+	return &GatewayConfig{
+		Config: &config.Config{
+			Env:      os.Getenv("GO_ENV"),
+			Port:     os.Getenv("PORT"),
+			AmqpURL:  os.Getenv("AMQP_URL"),
+			AmqpPort: os.Getenv("AMQP_PORT"),
+			LogLevel: os.Getenv("LOG_LEVEL"),
+		},
 		HmacSecret: []byte(os.Getenv("HMAC_SECRET")),
 	}
 }

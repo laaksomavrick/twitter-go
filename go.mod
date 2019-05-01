@@ -9,4 +9,5 @@ require (
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.7.1
 	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
+	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
 )

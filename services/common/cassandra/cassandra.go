@@ -6,6 +6,8 @@ import (
 	"github.com/gocql/gocql"
 )
 
+// TODO-7: handle disconnects from cassandra
+
 type Client struct {
 	cluster *gocql.ClusterConfig
 	Session *gocql.Session

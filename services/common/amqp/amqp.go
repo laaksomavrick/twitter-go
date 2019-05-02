@@ -10,6 +10,8 @@ import (
 	"github.com/streadway/amqp"
 )
 
+// TODO-6: handle disconnects from rmqp
+
 // Client wraps common amqp operations
 type Client struct {
 	conn            *amqp.Connection

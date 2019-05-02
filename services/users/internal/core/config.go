@@ -10,6 +10,7 @@ type UsersConfig struct {
 	*config.Config
 	CassandraURL      string
 	CassandraKeyspace string
+	HmacSecret        string
 }
 
 // NewConfig returns the default configuration values used across the api
@@ -36,12 +37,24 @@ func NewConfig() *UsersConfig {
 		os.Setenv("LOG_LEVEL", "debug")
 	}
 
+	// TODO-4: move cassandra env to another common config
+
 	if os.Getenv("CASSANDRA_URL") == "" {
 		os.Setenv("CASSANDRA_URL", "127.0.0.1")
 	}
 
 	if os.Getenv("CASSANDRA_KEYSPACE") == "" {
 		os.Setenv("CASSANDRA_KEYSPACE", "twtr")
+	}
+
+	if os.Getenv("HMAC_SECRET") == "" {
+		// TODO-5: real hmac secret; read from file
+		// if keyData, e := ioutil.ReadFile("test/hmacTestKey"); e == nil {
+		// 	hmacSampleSecret = keyData
+		// } else {
+		// 	panic(e)
+		// }
+		os.Setenv("HMAC_SECRET", "hmacsecret")
 	}
 
 	return &UsersConfig{
@@ -54,5 +67,6 @@ func NewConfig() *UsersConfig {
 		},
 		CassandraURL:      os.Getenv("CASSANDRA_URL"),
 		CassandraKeyspace: os.Getenv("CASSANDRA_KEYSPACE"),
+		HmacSecret:        os.Getenv("HMAC_SECRET"),
 	}
 }

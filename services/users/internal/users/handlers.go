@@ -2,8 +2,7 @@ package users
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
+	"twitter-go/services/common/auth"
 	"twitter-go/services/users/internal/core"
 )
 
@@ -13,29 +12,34 @@ func CreateHandler(u *core.Users) func([]byte) interface{} {
 
 		if err := json.Unmarshal(msg, &user); err != nil {
 			//TODO-1: err handling?
-			log.Fatal(err)
+			// log.Fatal(err)
+			return nil
 		}
 
-		// bcrypt password
+		if err := user.prepareForInsert(); err != nil {
+			//TODO-1: err handling?
+			// log.Fatal(err)
+			return nil
+		}
 
-		// set refresh token
-
-		// insert
 		repo := NewUsersRepository(u.Cassandra)
-		err := repo.Insert(user)
+		if err := repo.Insert(user); err != nil {
+			//TODO-1: err handling?
+			// log.Fatal(err)
+			return nil
+		}
+
+		accessToken, err := auth.GenerateToken(user.Username, u.Config.HmacSecret)
 		if err != nil {
 			//TODO-1: err handling?
-			log.Fatal(err)
+			// log.Fatal(err)
+			return nil
 		}
+		user.AccessToken = accessToken
 
-		// set access token (expiry, etc)
-
-		var foo string
-
-		_ = u.Cassandra.Session.Query("SELECT now() FROM system.local;").Scan(&foo)
-
-		fmt.Println(foo)
+		user.sanitize()
 
 		return user
 	}
+
 }

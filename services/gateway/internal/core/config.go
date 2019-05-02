@@ -36,8 +36,7 @@ func NewConfig() *GatewayConfig {
 	}
 
 	if os.Getenv("HMAC_SECRET") == "" {
-		// TODO: real hmac secret; read from file
-		// TODO: should only need to read this once on app start, not every req
+		// TODO-5: real hmac secret; read from file
 		// -> put hmacSecret in config
 		// if keyData, e := ioutil.ReadFile("test/hmacTestKey"); e == nil {
 		// 	hmacSampleSecret = keyData

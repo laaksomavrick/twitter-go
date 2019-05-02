@@ -7,7 +7,6 @@ import (
 )
 
 // ErrorResponse defines the shape of the default error response served by the application
-// TODO: deprecate
 type ErrorResponse struct {
 	Status int    `json:"status"`
 	Error  string `json:"error"`
@@ -19,7 +18,7 @@ type ErrorsResponse struct {
 	Errors map[string]interface{} `json:"errors"`
 }
 
-// TODO: unify err and errs response
+// TODO-8: unify err and errs response
 
 // EncodeJSONError issues an ErrorResponse payload to the client
 func EncodeJSONError(w http.ResponseWriter, err error, status int) {

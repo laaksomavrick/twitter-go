@@ -1,7 +1,8 @@
 package users
 
 import (
-	"errors"
+	"net/http"
+	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/cassandra"
 )
 
@@ -15,22 +16,22 @@ func NewUsersRepository(cassandra *cassandra.Client) *UsersRepository {
 	}
 }
 
-func (ur *UsersRepository) Insert(u User) error {
+func (ur *UsersRepository) Insert(u User) *amqp.RPCError {
 	// TODO-2: add insert method to cassandra wrapper?
 	exists := 0
 
 	err := ur.cassandra.Session.Query("SELECT count(*) FROM users WHERE username = ?", u.Username).Scan(&exists)
 	if err != nil {
-		return err
+		return &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	if exists == 1 {
-		return errors.New("User already exists")
+		return &amqp.RPCError{Message: "User already exists", Status: http.StatusUnprocessableEntity}
 	}
 
 	err = ur.cassandra.Session.Query("INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, u.RefreshToken).Exec()
 	if err != nil {
-		return err
+		return &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	return nil

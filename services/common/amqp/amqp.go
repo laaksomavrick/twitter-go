@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"twitter-go/services/common/logger"
 
 	"github.com/google/uuid"
@@ -17,6 +18,12 @@ type Client struct {
 	conn            *amqp.Connection
 	channel         *amqp.Channel
 	replyToDelivery <-chan amqp.Delivery
+}
+
+// RPCError represents the shape of an error from an rpc request
+type RPCError struct {
+	Message string
+	Status  int
 }
 
 // NewClient constructs a new instance of a client
@@ -57,7 +64,7 @@ func NewClient(url string, port string) (*Client, error) {
 
 // RPCRequest send a direct reply message to the given routingKey,
 // receiving and returning a response
-func (client *Client) RPCRequest(routingKey string, payload interface{}) (res []byte, err error) {
+func (client *Client) RPCRequest(routingKey string, payload interface{}) (res []byte, rpcError *RPCError) {
 	bytes, err := json.Marshal(payload)
 
 	if err != nil {
@@ -68,7 +75,7 @@ func (client *Client) RPCRequest(routingKey string, payload interface{}) (res []
 				"payload": payload,
 			},
 		})
-		return res, err
+		return res, &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	corrID := uuid.New().String()
@@ -94,14 +101,18 @@ func (client *Client) RPCRequest(routingKey string, payload interface{}) (res []
 				"body":       payload,
 			},
 		})
-		return res, err
+		return res, &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	for d := range client.replyToDelivery {
 		if corrID == d.CorrelationId {
-			// TODO-1: if d.Body == nil { err! } ???
-			res = d.Body
-			break
+			var replyError RPCError
+			_ = json.Unmarshal(d.Body, &replyError)
+			// if replyToDelivery is a valid error message
+			if replyError.Status != 0 {
+				return res, &replyError
+			}
+			return d.Body, nil
 		}
 	}
 

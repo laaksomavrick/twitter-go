@@ -26,14 +26,9 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 		}
 
 		res, err := s.Amqp.RPCRequest(amqp.CreateUserKey, createUserDto)
+
 		if err != nil {
-			handleError(
-				w,
-				err,
-				"Users.CreateHandler",
-				"An error occurred sending an rpc request",
-				http.StatusInternalServerError,
-			)
+			core.EncodeJSONError(w, errors.New(err.Message), err.Status)
 			return
 		}
 

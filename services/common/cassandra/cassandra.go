@@ -15,7 +15,7 @@ type Client struct {
 
 func NewClient(host string, keyspace string) (*Client, error) {
 	log.Println("Connecting cassandra...")
-	cluster := gocql.NewCluster("127.0.0.1")
+	cluster := gocql.NewCluster(host)
 	cluster.Keyspace = keyspace
 	cluster.Consistency = gocql.Quorum
 	session, err := cluster.CreateSession()

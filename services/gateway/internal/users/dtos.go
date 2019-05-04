@@ -58,3 +58,24 @@ func (dto *CreateUserDto) Validate() url.Values {
 
 	return errs
 }
+
+// AuthenticateUserDto defines the shape of the dto used to authenticate a user
+type AuthenticateUserDto struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// Validate validates that the dto is well formed for entry into the system
+func (dto *AuthenticateUserDto) Validate() url.Values {
+	errs := url.Values{}
+
+	if dto.Username == "" {
+		errs.Add("username", "Username is a required field")
+	}
+
+	if dto.Password == "" {
+		errs.Add("password", "Password is a required field")
+	}
+
+	return errs
+}

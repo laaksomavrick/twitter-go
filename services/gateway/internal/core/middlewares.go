@@ -25,6 +25,7 @@ func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
 }
 
 // CheckAuthentication parses the Authorization header and populates the request context with userID
+// TODO-9: verify this works
 func CheckAuthentication(authRequired bool, hmacSecret []byte) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
@@ -94,6 +95,7 @@ func LogRequest(name string) Middleware {
 	}
 }
 
+//TODO-9 move to common/token; refactor userID to username
 func parseToken(tokenString string, hmacSecret []byte) (int, error) {
 	var userID int
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {

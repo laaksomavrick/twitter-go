@@ -36,3 +36,24 @@ func (ur *UsersRepository) Insert(u User) *amqp.RPCError {
 
 	return nil
 }
+
+func (ur *UsersRepository) FindByUsername(username string) (User, *amqp.RPCError) {
+
+	var user User
+	var password string
+	var refreshToken string
+	var email string
+
+	err := ur.cassandra.Session.Query("SELECT password, email, refresh_token FROM users WHERE username = ?", username).Scan(&password, &email, &refreshToken)
+	if err != nil {
+		// TODO-10
+		return user, &amqp.RPCError{Message: "Not found", Status: http.StatusNotFound}
+	}
+
+	user.Username = username
+	user.Password = password
+	user.Email = email
+	user.RefreshToken = refreshToken
+
+	return user, nil
+}

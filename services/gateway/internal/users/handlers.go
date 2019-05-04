@@ -16,7 +16,7 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 
 		defer r.Body.Close()
 		if err := json.NewDecoder(r.Body).Decode(createUserDto); err != nil {
-			core.EncodeJSONError(w, errors.New("Bad request sent"), http.StatusBadRequest)
+			core.EncodeJSONError(w, errors.New(core.UnprocessableEntity), http.StatusUnprocessableEntity)
 			return
 		}
 
@@ -45,6 +45,46 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 		}
 
 		json.NewEncoder(w).Encode(user)
+	}
+}
+
+// AuthorizeHandler handles the username and password authorization flow
+func AuthorizeHandler(s *core.Gateway) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authenticateUserDto := &AuthenticateUserDto{}
+
+		defer r.Body.Close()
+		if err := json.NewDecoder(r.Body).Decode(authenticateUserDto); err != nil {
+			core.EncodeJSONError(w, errors.New(core.UnprocessableEntity), http.StatusUnprocessableEntity)
+			return
+		}
+
+		if errs := authenticateUserDto.Validate(); len(errs) > 0 {
+			core.EncodeJSONErrors(w, errs, http.StatusBadRequest)
+			return
+		}
+
+		res, err := s.Amqp.RPCRequest(amqp.AuthorizeUserKey, authenticateUserDto)
+
+		if err != nil {
+			core.EncodeJSONError(w, errors.New(err.Message), err.Status)
+			return
+		}
+
+		authorization := make(map[string]interface{})
+		if err := json.Unmarshal(res, &authorization); err != nil {
+			handleError(
+				w,
+				err,
+				"Users.AuthorizeHandler",
+				"An error occurred processing an rpc response",
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		json.NewEncoder(w).Encode(authorization)
+
 	}
 }
 

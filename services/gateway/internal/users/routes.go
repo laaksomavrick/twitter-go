@@ -11,4 +11,11 @@ var Routes = core.Routes{
 		AuthRequired: false,
 		HandlerFunc:  CreateHandler,
 	},
+	core.Route{
+		Name:         "AuthenticateUser",
+		Method:       "POST",
+		Pattern:      "/users/authorize",
+		AuthRequired: false,
+		HandlerFunc:  AuthorizeHandler,
+	},
 }

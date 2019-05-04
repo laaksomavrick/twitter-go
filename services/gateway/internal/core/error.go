@@ -6,6 +6,10 @@ import (
 	"net/url"
 )
 
+const (
+	UnprocessableEntity = "Bad request sent."
+)
+
 // ErrorResponse defines the shape of the default error response served by the application
 type ErrorResponse struct {
 	Status int    `json:"status"`
@@ -24,7 +28,7 @@ type ErrorsResponse struct {
 func EncodeJSONError(w http.ResponseWriter, err error, status int) {
 	errResp := &ErrorResponse{
 		Status: status,
-		Error:  err.Error(),
+		Error:  err.Error(), //TODO-10: error should be derivative from status, not user provided ***
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

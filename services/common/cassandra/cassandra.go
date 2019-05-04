@@ -1,8 +1,6 @@
 package cassandra
 
 import (
-	"log"
-
 	"github.com/gocql/gocql"
 )
 
@@ -14,7 +12,6 @@ type Client struct {
 }
 
 func NewClient(host string, keyspace string) (*Client, error) {
-	log.Println("Connecting cassandra...")
 	cluster := gocql.NewCluster(host)
 	cluster.Keyspace = keyspace
 	cluster.Consistency = gocql.Quorum
@@ -22,8 +19,10 @@ func NewClient(host string, keyspace string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &Client{
 		cluster: cluster,
 		Session: session,
 	}, nil
+
 }

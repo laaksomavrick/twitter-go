@@ -44,26 +44,26 @@ func CreateHandler(u *core.Users) func([]byte) interface{} {
 func AuthorizeHandler(u *core.Users) func([]byte) interface{} {
 	return func(msg []byte) interface{} {
 
-		var userRequest User
+		var authorizeDto AuthorizeDto
 
-		if err := json.Unmarshal(msg, &userRequest); err != nil {
+		if err := json.Unmarshal(msg, &authorizeDto); err != nil {
 			return amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
 		}
 
 		// find user from given username
 		repo := NewUsersRepository(u.Cassandra)
-		userRecord, amqpErr := repo.FindByUsername(userRequest.Username)
+		userRecord, amqpErr := repo.FindByUsername(authorizeDto.Username)
 		if amqpErr != nil {
 			return amqpErr
 		}
 
 		// compare password against hash
-		if err := userRecord.compareHashAndPassword(userRequest.Password); err != nil {
+		if err := userRecord.compareHashAndPassword(authorizeDto.Password); err != nil {
 			return amqp.RPCError{Message: "Invalid password provided", Status: http.StatusBadRequest}
 		}
 
 		// return new accessToken and refreshToken from record
-		accessToken, err := auth.GenerateToken(userRequest.Username, u.Config.HmacSecret)
+		accessToken, err := auth.GenerateToken(authorizeDto.Username, u.Config.HmacSecret)
 		if err != nil {
 			return amqp.RPCError{Message: "Something went wrong", Status: http.StatusInternalServerError}
 		}

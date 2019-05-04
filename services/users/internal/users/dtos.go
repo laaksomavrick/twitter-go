@@ -35,6 +35,11 @@ func (u *User) compareHashAndPassword(password string) error {
 	return bcrypt.CompareHashAndPassword(hp, p)
 }
 
+type AuthorizeDto struct {
+	Username string `json:"username"`
+	Password string `json:",omitempty"`
+}
+
 type AuthorizeResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`

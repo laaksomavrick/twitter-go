@@ -59,7 +59,7 @@ func AuthorizeHandler(u *core.Users) func([]byte) interface{} {
 
 		// compare password against hash
 		if err := userRecord.compareHashAndPassword(authorizeDto.Password); err != nil {
-			return amqp.RPCError{Message: "Invalid password provided", Status: http.StatusBadRequest}
+			return amqp.RPCError{Message: "Invalid password provided", Status: http.StatusUnprocessableEntity}
 		}
 
 		// return new accessToken and refreshToken from record

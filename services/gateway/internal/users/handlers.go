@@ -16,7 +16,7 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 
 		defer r.Body.Close()
 		if err := json.NewDecoder(r.Body).Decode(createUserDto); err != nil {
-			core.EncodeJSONError(w, errors.New(core.UnprocessableEntity), http.StatusUnprocessableEntity)
+			core.EncodeJSONError(w, errors.New(core.UnprocessableEntity), http.StatusBadRequest)
 			return
 		}
 
@@ -55,7 +55,7 @@ func AuthorizeHandler(s *core.Gateway) http.HandlerFunc {
 
 		defer r.Body.Close()
 		if err := json.NewDecoder(r.Body).Decode(authenticateUserDto); err != nil {
-			core.EncodeJSONError(w, errors.New(core.UnprocessableEntity), http.StatusUnprocessableEntity)
+			core.EncodeJSONError(w, errors.New(core.UnprocessableEntity), http.StatusBadRequest)
 			return
 		}
 

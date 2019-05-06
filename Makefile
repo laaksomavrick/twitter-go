@@ -15,5 +15,5 @@ build:
 format:
 	./scripts/gofmt.sh
 
-integration-test:
+test:
 	./scripts/run-integration-tests.sh

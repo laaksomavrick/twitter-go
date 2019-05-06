@@ -40,6 +40,7 @@ func Error(loggable Loggable) {
 	logForLevel("Error", loggable)
 }
 
+// TODO-12: make this similar to cassandra logger
 func logForLevel(logLevel string, loggable Loggable) {
 	envLogLevel := env.GetEnv("LOG_LEVEL", "debug")
 	envLogLevelInt := logLevelMappingTable[envLogLevel]

@@ -26,7 +26,7 @@ func (ur *UsersRepository) Insert(u User) *amqp.RPCError {
 	}
 
 	if exists == 1 {
-		return &amqp.RPCError{Message: "User already exists", Status: http.StatusUnprocessableEntity}
+		return &amqp.RPCError{Message: "User already exists", Status: http.StatusConflict}
 	}
 
 	err = ur.cassandra.Session.Query("INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, u.RefreshToken).Exec()

@@ -24,7 +24,8 @@ func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
 	return f
 }
 
-// CheckAuthentication parses the Authorization header and populates the request context with userID
+// CheckAuthentication parses the Authorization header for a valid token,
+// populating the request context with the username encoded in the token
 // TODO-9: verify this works
 func CheckAuthentication(authRequired bool, hmacSecret []byte) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
@@ -50,14 +51,14 @@ func CheckAuthentication(authRequired bool, hmacSecret []byte) Middleware {
 			token := split[1]
 
 			// parse token
-			user, err := parseToken(token, hmacSecret)
+			username, err := parseToken(token, hmacSecret)
 			if err != nil {
 				EncodeJSONError(w, err, http.StatusInternalServerError)
 				return
 			}
 
-			// attach user obj to request for req.user
-			ctx := context.WithValue(r.Context(), "userID", user)
+			// attach user obj to request for req.usermame
+			ctx := context.WithValue(r.Context(), "username", username)
 
 			// next
 			f(w, r.WithContext(ctx))
@@ -95,25 +96,28 @@ func LogRequest(name string) Middleware {
 	}
 }
 
-//TODO-9 move to common/token; refactor userID to username
-func parseToken(tokenString string, hmacSecret []byte) (int, error) {
-	var userID int
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func parseToken(tokenString string, hmacSecret []byte) (username string, err error) {
+	hmacFunc := func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
 		return hmacSecret, nil
-	})
+	}
+
+	token, err := jwt.Parse(tokenString, hmacFunc)
 	if err != nil {
-		return userID, errors.New("Error parsing token")
+		return username, errors.New("Error parsing token")
 	}
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID = int(claims["userID"].(float64))
-		if err != nil {
-			return userID, err
-		}
-		return userID, nil
-	} else {
-		return userID, errors.New("Error parsing token")
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return username, errors.New("Error parsing token")
 	}
+
+	username = string(claims["username"].(string))
+	if err != nil {
+		return username, err
+	}
+
+	return username, nil
 }

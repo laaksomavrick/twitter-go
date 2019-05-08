@@ -8,3 +8,7 @@ The API gateway is the entry point to the backend. It defines the api surface fo
 
 - `POST /users`
     - Create a new user
+- `POST /users/authorize`
+    - Authorize a user (username + password login flow)
+- `POST /users/reauthorize`
+    - TODO

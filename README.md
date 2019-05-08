@@ -21,9 +21,8 @@ Twitter-go is an application api intended to back a minimal feature set of twitt
 
 - API gateway (Entry point into the backend; maps http to n rpc calls)
 - User service (CRUD for users; user authorization)
-- User profile service (CRUD for user profiles)
 - Post service (Adding to user post list; "my posts")
-- Follower service (Managing user - user follows/followers relationships)
+- Follower service (Managing user - user follows/followers relationships; "my followers/follower count")
 - User feed service (Aggregating user activity feed; "my feed")
 
 #### Service ethos:

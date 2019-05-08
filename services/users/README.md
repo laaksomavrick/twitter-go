@@ -8,7 +8,7 @@ The users service provides an interface for creating and authenticating accounts
 {
   username: text (pk),
   email: text (uniq),
-  password: text (bcrypted),
+  password: text,
   refresh_token: text
 }
 ```
@@ -16,8 +16,5 @@ The users service provides an interface for creating and authenticating accounts
 #### Access patterns
 
 - Create a new user
-- Retrieve or issue a user's access token via a "login" (username and password) _todo_
-  - this should generate a new refresh token
-- Retrieve or issue a user's access token via a refresh token _todo_
-- Verify an access token against the one stored in the database _todo_
-- Deactivate / reactivate a user _todo_
+- Retrieve or issue a user's access token via a "login" (username and password)
+- _todo_ Retrieve or issue a user's access token via a refresh token

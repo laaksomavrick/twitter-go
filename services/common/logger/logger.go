@@ -41,6 +41,7 @@ func Error(loggable Loggable) {
 }
 
 // TODO-12: make this similar to cassandra logger
+// Give each request a uuid for tracing?
 func logForLevel(logLevel string, loggable Loggable) {
 	envLogLevel := env.GetEnv("LOG_LEVEL", "debug")
 	envLogLevelInt := logLevelMappingTable[envLogLevel]

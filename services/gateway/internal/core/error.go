@@ -7,7 +7,9 @@ import (
 )
 
 const (
-	UnprocessableEntity = "Bad request sent."
+	UnprocessableEntity = "Unprocessable request sent."
+	BadRequest          = "Bad request sent."
+	Forbidden           = "Forbidden."
 )
 
 // ErrorResponse defines the shape of the default error response served by the application
@@ -23,6 +25,7 @@ type ErrorsResponse struct {
 }
 
 // TODO-8: unify err and errs response
+// Error -> Message ?
 
 // EncodeJSONError issues an ErrorResponse payload to the client
 func EncodeJSONError(w http.ResponseWriter, err error, status int) {

@@ -3,7 +3,7 @@ package main
 import (
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/gateway/internal/core"
-	"twitter-go/services/gateway/internal/hello"
+	"twitter-go/services/gateway/internal/tweets"
 	"twitter-go/services/gateway/internal/users"
 )
 
@@ -24,8 +24,8 @@ func main() {
 
 	// initialize exported routes from packages
 	routes := []core.Routes{
-		hello.Routes,
 		users.Routes,
+		tweets.Routes,
 	}
 	var appRoutes []core.Route
 	for _, r := range routes {

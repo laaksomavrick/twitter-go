@@ -12,3 +12,12 @@ The API gateway is the entry point to the backend. It defines the api surface fo
     - Authorize a user (username + password login flow)
 - `POST /users/reauthorize`
     - TODO
+
+##### Tweets
+
+- `POST /tweets`
+    - Create a new tweet for the logged in user
+- `GET /tweets/me`
+    - Get tweets posted by the logged in user
+- `GET /tweets/$username`
+    - Get tweets posted by the specified $username

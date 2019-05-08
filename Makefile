@@ -1,19 +1,19 @@
 .PHONY: migrate up build format run
 
 migrate:
-	./scripts/migrate.sh
+	@scripts/migrate.sh
 
 up:
-	docker-compose -f build/docker-compose.yml up
+	@docker-compose -f build/docker-compose.yml up
 
 run:
-	./scripts/run-all.sh
+	@scripts/run-all.sh
 
 build:
-	go build -ldflags="-s -w" -o bin/gateway services/gateway/cmd/main.go
+	@go build -ldflags="-s -w" -o bin/gateway services/gateway/cmd/main.go
 
 format:
-	./scripts/gofmt.sh
+	@scripts/gofmt.sh
 
 test:
-	./scripts/run-integration-tests.sh
+	@scripts/run-integration-tests.sh

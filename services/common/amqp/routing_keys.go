@@ -3,6 +3,7 @@ package amqp
 const (
 	CreateUserKey    = "twtr.users.create"
 	AuthorizeUserKey = "twtr.users.authorize"
+	CreateTweetKey   = "twtr.tweets.create"
 )
 
 // InterpolateRoutingKey replaces all asterisks present in the function argument key

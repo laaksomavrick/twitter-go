@@ -3,8 +3,8 @@ package tweets
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
+	"twitter-go/services/common/amqp"
 	"twitter-go/services/gateway/internal/core"
 )
 
@@ -30,10 +30,19 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println(r.Context().Value("username"))
+		res, rpcErr := s.Amqp.RPCRequest(amqp.CreateTweetKey, createTweetDto)
 
-		json.NewEncoder(w).Encode(map[string]string{
-			"hello": "1",
-		})
+		if rpcErr != nil {
+			core.EncodeJSONError(w, errors.New(rpcErr.Message), rpcErr.Status)
+			return
+		}
+
+		tweet := make(map[string]interface{})
+		if err := json.Unmarshal(res, &tweet); err != nil {
+			core.EncodeJSONError(w, errors.New(core.InternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(tweet)
 	}
 }

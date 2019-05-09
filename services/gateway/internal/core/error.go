@@ -10,6 +10,7 @@ const (
 	UnprocessableEntity = "Unprocessable request sent."
 	BadRequest          = "Bad request sent."
 	Forbidden           = "Forbidden."
+	InternalServerError = "Something went wrong."
 )
 
 // ErrorResponse defines the shape of the default error response served by the application

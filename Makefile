@@ -11,6 +11,8 @@ run:
 
 build:
 	@go build -ldflags="-s -w" -o bin/gateway services/gateway/cmd/main.go
+	@go build -ldflags="-s -w" -o bin/gateway services/users/cmd/main.go
+	@go build -ldflags="-s -w" -o bin/gateway services/tweets/cmd/main.go
 
 format:
 	@scripts/gofmt.sh

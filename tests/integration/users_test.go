@@ -23,7 +23,7 @@ func (suite *UsersTestSuite) SetupSuite() {
 }
 
 func (suite *UsersTestSuite) TestCreateUserSuccess() {
-	statusCode, createUserResponse := suite.createUserViaHTTP(map[string]string{
+	statusCode, createUserResponse := suite.CreateUserViaHTTP(map[string]string{
 		"username":             "username",
 		"password":             "password",
 		"passwordConfirmation": "password",
@@ -37,7 +37,7 @@ func (suite *UsersTestSuite) TestCreateUserSuccess() {
 }
 
 func (suite *UsersTestSuite) TestCreateUserBadRequestFailure() {
-	statusCode, _ := suite.createUserViaHTTP(map[string]string{})
+	statusCode, _ := suite.CreateUserViaHTTP(map[string]string{})
 	assert.Equal(suite.T(), 400, statusCode)
 }
 
@@ -49,8 +49,8 @@ func (suite *UsersTestSuite) TestCreateUserAlreadyExistsFailure() {
 		"email":                "email@gmail.com",
 		"displayName":          "displayName",
 	}
-	statusCodeUnique, _ := suite.createUserViaHTTP(request)
-	statusCodeDuplicate, _ := suite.createUserViaHTTP(request)
+	statusCodeUnique, _ := suite.CreateUserViaHTTP(request)
+	statusCodeDuplicate, _ := suite.CreateUserViaHTTP(request)
 
 	assert.Equal(suite.T(), 200, statusCodeUnique)
 	assert.Equal(suite.T(), 409, statusCodeDuplicate)
@@ -60,7 +60,7 @@ func (suite *UsersTestSuite) TestAuthenticateUserSuccess() {
 	username := "username2"
 	password := "password"
 
-	_, _ = suite.createUserViaHTTP(map[string]string{
+	_, _ = suite.CreateUserViaHTTP(map[string]string{
 		"username":             username,
 		"password":             password,
 		"passwordConfirmation": "password",
@@ -90,7 +90,7 @@ func (suite *UsersTestSuite) TestAuthenticateUserBadPasswordFailure() {
 	password := "password"
 	badPassword := "aardvark"
 
-	_, _ = suite.createUserViaHTTP(map[string]string{
+	_, _ = suite.CreateUserViaHTTP(map[string]string{
 		"username":             username,
 		"password":             password,
 		"passwordConfirmation": "password",
@@ -120,24 +120,6 @@ func (suite *UsersTestSuite) TestAuthenticateUserMissingUserFailure() {
 
 func TestUsersTestSuite(t *testing.T) {
 	suite.Run(t, new(UsersTestSuite))
-}
-
-func (suite *UsersTestSuite) createUserViaHTTP(request map[string]string) (statusCode int, createUserResponse map[string]interface{}) {
-	marshalled, err := json.Marshal(request)
-	body := bytes.NewBuffer(marshalled)
-
-	resp, err := http.Post((suite.GetBaseURLWithSuffix("/users")), "application/json", body)
-	if err != nil {
-		suite.Fail("Received no response from /users")
-	}
-
-	defer resp.Body.Close()
-
-	if err := json.NewDecoder(resp.Body).Decode(&createUserResponse); err != nil {
-		suite.Fail("Failed parsing response body")
-	}
-
-	return resp.StatusCode, createUserResponse
 }
 
 func (suite *UsersTestSuite) authenticateUserViaHTTP(request map[string]string) (statusCode int, authenticateUserResponse map[string]interface{}) {

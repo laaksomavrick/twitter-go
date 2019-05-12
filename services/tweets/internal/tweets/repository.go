@@ -37,11 +37,23 @@ func (tr *Repository) Insert(t Tweet) *amqp.RPCError {
 }
 
 // GetAll returns all tweets for the given username
-func (tr *Repository) GetAll(username string) (tweets []Tweet, err *amqp.RPCError) {
+func (tr *Repository) GetAll(username string) (tweets []Tweet, rpcErr *amqp.RPCError) {
 	var id gocql.UUID
 	var content string
 	var createdAt time.Time
+	exists := 0
 
+	// Check if user exists
+	err := tr.cassandra.Session.Query("SELECT count(*) FROM users WHERE username = ?", username).Scan(&exists)
+	if err != nil {
+		return nil, &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+	}
+
+	if exists == 0 {
+		return nil, &amqp.RPCError{Message: "User not found", Status: http.StatusNotFound}
+	}
+
+	// Get tweets
 	iter := tr.cassandra.Session.Query("SELECT id, username, content, created_at FROM tweets_by_user WHERE username = ?", username).Iter()
 
 	for iter.Scan(&id, &username, &content, &createdAt) {
@@ -55,6 +67,11 @@ func (tr *Repository) GetAll(username string) (tweets []Tweet, err *amqp.RPCErro
 	}
 	if err := iter.Close(); err != nil {
 		return nil, &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+	}
+
+	// if none found, make it an empty array
+	if tweets == nil {
+		tweets = []Tweet{}
 	}
 
 	return tweets, nil

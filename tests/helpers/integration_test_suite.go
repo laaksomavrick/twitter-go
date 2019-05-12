@@ -1,7 +1,10 @@
 package helpers
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"twitter-go/services/common/cassandra"
 	"twitter-go/services/common/env"
 
@@ -53,4 +56,22 @@ func (suite *IntegrationTestSuite) GetBaseURL() string {
 
 func (suite *IntegrationTestSuite) GetBaseURLWithSuffix(suffix string) string {
 	return fmt.Sprintf("http://%s:%s%s", suite.Host, suite.Port, suffix)
+}
+
+func (suite *IntegrationTestSuite) CreateUserViaHTTP(request map[string]string) (statusCode int, createUserResponse map[string]interface{}) {
+	marshalled, err := json.Marshal(request)
+	body := bytes.NewBuffer(marshalled)
+
+	resp, err := http.Post((suite.GetBaseURLWithSuffix("/users")), "application/json", body)
+	if err != nil {
+		suite.Fail("Received no response from /users")
+	}
+
+	defer resp.Body.Close()
+
+	if err := json.NewDecoder(resp.Body).Decode(&createUserResponse); err != nil {
+		suite.Fail("Failed parsing response body")
+	}
+
+	return resp.StatusCode, createUserResponse
 }

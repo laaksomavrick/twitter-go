@@ -19,7 +19,7 @@ func CreateHandler(t *core.TweetsService) func([]byte) interface{} {
 
 		tweet.prepareForInsert()
 
-		repo := NewTweetsRepository(t.Cassandra)
+		repo := NewRepository(t.Cassandra)
 		if err := repo.Insert(tweet); err != nil {
 			return err
 		}
@@ -30,6 +30,7 @@ func CreateHandler(t *core.TweetsService) func([]byte) interface{} {
 	}
 }
 
+// GetAllHandler handles returning all tweets for a given username
 func GetAllHandler(t *core.TweetsService) func([]byte) interface{} {
 	return func(msg []byte) interface{} {
 		var req GetAllUserTweets
@@ -38,7 +39,7 @@ func GetAllHandler(t *core.TweetsService) func([]byte) interface{} {
 			return amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
 		}
 
-		repo := NewTweetsRepository(t.Cassandra)
+		repo := NewRepository(t.Cassandra)
 		tweets, err := repo.GetAll(req.Username)
 		if err != nil {
 			return err

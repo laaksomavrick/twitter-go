@@ -6,6 +6,7 @@ import (
 	"github.com/gocql/gocql"
 )
 
+// Tweet defines the shape of a tweet
 type Tweet struct {
 	ID        gocql.UUID `json:"id"`
 	Username  string     `json:"username"`
@@ -18,6 +19,7 @@ func (tweet *Tweet) prepareForInsert() {
 	tweet.CreatedAt = time.Now().UTC()
 }
 
+// GetAllUserTweets defines the shape of a GetAllTweets request
 type GetAllUserTweets struct {
 	Username string `json:"username"`
 }

@@ -9,17 +9,20 @@ import (
 	"github.com/gocql/gocql"
 )
 
-type TweetsRepository struct {
+// Repository provides an abstraction over database logic for common operations
+type Repository struct {
 	cassandra *cassandra.Client
 }
 
-func NewTweetsRepository(cassandra *cassandra.Client) *TweetsRepository {
-	return &TweetsRepository{
+// NewRepository return an instantiated repository
+func NewRepository(cassandra *cassandra.Client) *Repository {
+	return &Repository{
 		cassandra: cassandra,
 	}
 }
 
-func (tr *TweetsRepository) Insert(t Tweet) *amqp.RPCError {
+// Insert creates tweet records to all relevant tables
+func (tr *Repository) Insert(t Tweet) *amqp.RPCError {
 	err := tr.cassandra.Session.Query("INSERT INTO tweets (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content).Exec()
 	if err != nil {
 		return &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
@@ -33,7 +36,8 @@ func (tr *TweetsRepository) Insert(t Tweet) *amqp.RPCError {
 	return nil
 }
 
-func (tr *TweetsRepository) GetAll(username string) (tweets []Tweet, err *amqp.RPCError) {
+// GetAll returns all tweets for the given username
+func (tr *Repository) GetAll(username string) (tweets []Tweet, err *amqp.RPCError) {
 	var id gocql.UUID
 	var content string
 	var createdAt time.Time

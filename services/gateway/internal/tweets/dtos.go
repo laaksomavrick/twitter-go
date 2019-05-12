@@ -20,3 +20,17 @@ func (dto *CreateTweetDto) Validate() url.Values {
 
 	return errs
 }
+
+type GetAllUserTweetsDto struct {
+	Username string `json:"username"`
+}
+
+func (dto *GetAllUserTweetsDto) Validate() url.Values {
+	errs := url.Values{}
+
+	if dto.Username == "" {
+		errs.Add("username", "Username is a required field")
+	}
+
+	return errs
+}

@@ -11,6 +11,7 @@ const (
 	BadRequest          = "Bad request sent."
 	Forbidden           = "Forbidden."
 	InternalServerError = "Something went wrong."
+	NotFound            = "Resource not found."
 )
 
 // ErrorResponse defines the shape of the default error response served by the application

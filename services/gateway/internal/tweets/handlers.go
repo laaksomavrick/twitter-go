@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/gateway/internal/core"
+
+	"github.com/gorilla/mux"
 )
 
 // CreateHandler handles creating a new tweet
@@ -44,5 +46,37 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 		}
 
 		json.NewEncoder(w).Encode(tweet)
+	}
+}
+
+func GetAllUserTweets(s *core.Gateway) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		username := vars["username"]
+
+		getAllUserTweetsDto := &GetAllUserTweetsDto{
+			Username: username,
+		}
+
+		if errs := getAllUserTweetsDto.Validate(); len(errs) > 0 {
+			core.EncodeJSONErrors(w, errs, http.StatusBadRequest)
+			return
+		}
+
+		res, rpcErr := s.Amqp.RPCRequest(amqp.GetAllUserTweetsKey, getAllUserTweetsDto)
+
+		if rpcErr != nil {
+			core.EncodeJSONError(w, errors.New(rpcErr.Message), rpcErr.Status)
+			return
+		}
+
+		tweets := make([]map[string]interface{}, 0)
+
+		if err := json.Unmarshal(res, &tweets); err != nil {
+			core.EncodeJSONError(w, errors.New(core.InternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(tweets)
 	}
 }

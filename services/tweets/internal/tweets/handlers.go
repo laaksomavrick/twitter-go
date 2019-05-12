@@ -29,3 +29,21 @@ func CreateHandler(t *core.TweetsService) func([]byte) interface{} {
 		return tweet
 	}
 }
+
+func GetAllHandler(t *core.TweetsService) func([]byte) interface{} {
+	return func(msg []byte) interface{} {
+		var req GetAllUserTweets
+
+		if err := json.Unmarshal(msg, &req); err != nil {
+			return amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		}
+
+		repo := NewTweetsRepository(t.Cassandra)
+		tweets, err := repo.GetAll(req.Username)
+		if err != nil {
+			return err
+		}
+
+		return tweets
+	}
+}

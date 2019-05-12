@@ -2,8 +2,11 @@ package tweets
 
 import (
 	"net/http"
+	"time"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/cassandra"
+
+	"github.com/gocql/gocql"
 )
 
 type TweetsRepository struct {
@@ -28,4 +31,27 @@ func (tr *TweetsRepository) Insert(t Tweet) *amqp.RPCError {
 	}
 
 	return nil
+}
+
+func (tr *TweetsRepository) GetAll(username string) (tweets []Tweet, err *amqp.RPCError) {
+	var id gocql.UUID
+	var content string
+	var createdAt time.Time
+
+	iter := tr.cassandra.Session.Query("SELECT id, username, content, created_at FROM tweets_by_user WHERE username = ?", username).Iter()
+
+	for iter.Scan(&id, &username, &content, &createdAt) {
+		tweet := Tweet{
+			ID:        id,
+			Username:  username,
+			Content:   content,
+			CreatedAt: createdAt,
+		}
+		tweets = append(tweets, tweet)
+	}
+	if err := iter.Close(); err != nil {
+		return nil, &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+	}
+
+	return tweets, nil
 }

@@ -11,4 +11,8 @@ var Repliers = core.Repliers{
 		RoutingKey: amqp.CreateTweetKey,
 		Handler:    CreateHandler,
 	},
+	core.Replier{
+		RoutingKey: amqp.GetAllUserTweetsKey,
+		Handler:    GetAllHandler,
+	},
 }

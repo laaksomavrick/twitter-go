@@ -4,6 +4,7 @@ const (
 	CreateUserKey       = "twtr.users.create"
 	AuthorizeUserKey    = "twtr.*.authorize"
 	CreateTweetKey      = "twtr.*.tweets.create"
+	CreatedTweetKey     = "twtr.*.tweets.created"
 	GetAllUserTweetsKey = "twtr.*.tweets.get-all"
 )
 

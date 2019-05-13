@@ -24,7 +24,7 @@ func CreateHandler(t *core.TweetsService) func([]byte) interface{} {
 			return err
 		}
 
-		// TODO-16: broadcast that a tweet was created
+		t.Amqp.PublishToTopic(amqp.CreatedTweetKey, []string{tweet.Username}, tweet)
 
 		return tweet
 	}

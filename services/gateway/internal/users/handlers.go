@@ -25,7 +25,7 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		res, err := s.Amqp.DirectRequest(amqp.CreateUserKey, createUserDto)
+		res, err := s.Amqp.DirectRequest(amqp.CreateUserKey, []string{}, createUserDto)
 
 		if err != nil {
 			core.EncodeJSONError(w, errors.New(err.Message), err.Status)
@@ -64,7 +64,7 @@ func AuthorizeHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		res, err := s.Amqp.DirectRequest(amqp.AuthorizeUserKey, authenticateUserDto)
+		res, err := s.Amqp.DirectRequest(amqp.AuthorizeUserKey, []string{authenticateUserDto.Username}, authenticateUserDto)
 
 		if err != nil {
 			core.EncodeJSONError(w, errors.New(err.Message), err.Status)

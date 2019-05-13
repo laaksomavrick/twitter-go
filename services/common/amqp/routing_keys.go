@@ -2,15 +2,19 @@ package amqp
 
 const (
 	CreateUserKey       = "twtr.users.create"
-	AuthorizeUserKey    = "twtr.users.authorize"
-	CreateTweetKey      = "twtr.tweets.create"
-	GetAllUserTweetsKey = "twtr.tweets.get-all"
+	AuthorizeUserKey    = "twtr.*.authorize"
+	CreateTweetKey      = "twtr.*.tweets.create"
+	GetAllUserTweetsKey = "twtr.*.tweets.get-all"
 )
 
 // InterpolateRoutingKey replaces all asterisks present in the function argument key
 // with the values of the function argument values. Doesn't do any error handling, so
 // use wisely
 func interpolateRoutingKey(key string, values []string) string {
+	if len(values) == 0 {
+		return key
+	}
+
 	interpolated := ""
 
 	for _, byte := range key {

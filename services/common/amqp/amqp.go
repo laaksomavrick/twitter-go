@@ -66,8 +66,9 @@ func NewClient(url string, port string) (*Client, error) {
 
 // DirectRequest send a direct reply message to the given routingKey,
 // receiving and returning a response
-func (client *Client) DirectRequest(routingKey string, payload interface{}) (res []byte, rpcError *RPCError) {
+func (client *Client) DirectRequest(routingKey string, routingKeyValues []string, payload interface{}) (res []byte, rpcError *RPCError) {
 	bytes, err := json.Marshal(payload)
+	interpolatedRoutingKey := interpolateRoutingKey(routingKey, routingKeyValues)
 
 	if err != nil {
 		logger.Error(logger.Loggable{
@@ -83,10 +84,10 @@ func (client *Client) DirectRequest(routingKey string, payload interface{}) (res
 	corrID := uuid.New().String()
 
 	err = client.channel.Publish(
-		"",         // exchange
-		routingKey, // routing key
-		false,      // mandatory
-		false,      // immediate
+		exchange,               // exchange
+		interpolatedRoutingKey, // routing key
+		false,                  // mandatory
+		false,                  // immediate
 		amqp.Publishing{
 			ContentType:   "text/plain",
 			CorrelationId: corrID,
@@ -99,7 +100,7 @@ func (client *Client) DirectRequest(routingKey string, payload interface{}) (res
 			Caller:  "DirectRequest",
 			Message: "Failed to publish a message",
 			Data: map[string]interface{}{
-				"routingKey": routingKey,
+				"routingKey": interpolatedRoutingKey,
 				"body":       payload,
 			},
 		})
@@ -124,6 +125,26 @@ func (client *Client) DirectRequest(routingKey string, payload interface{}) (res
 // DirectReply applies a given function as a callback on a given routingKey for processing,
 // directly replying with the result
 func (client *Client) DirectReply(routingKey string, callback func([]byte) interface{}) {
+	err := client.channel.ExchangeDeclare(
+		exchange, // name
+		"topic",  // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
+	)
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Caller:  "ConsumeFromTopic",
+			Message: "An error occurred declaring the exchange",
+			Data: map[string]interface{}{
+				routingKey: routingKey,
+			},
+		})
+	}
+
 	q, err := client.channel.QueueDeclare(
 		routingKey, // name
 		false,      // durable
@@ -137,6 +158,25 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 		logger.Error(logger.Loggable{
 			Caller:  "DirectReply",
 			Message: "An error occurred initializing a queue",
+			Data: map[string]interface{}{
+				"routingKey": routingKey,
+			},
+		})
+		return
+	}
+
+	err = client.channel.QueueBind(
+		q.Name,     // queue name
+		routingKey, // routing key
+		exchange,   // exchange
+		false,
+		nil,
+	)
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Caller:  "DirectReply",
+			Message: "An error occurred binding a queue",
 			Data: map[string]interface{}{
 				"routingKey": routingKey,
 			},
@@ -165,7 +205,7 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 		q.Name, // queue
 		"",     // consumer
 		false,  // auto-ack
-		false,  // exclusive
+		true,   // exclusive
 		false,  // no-local
 		false,  // no-wait
 		nil,    // args

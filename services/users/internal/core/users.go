@@ -38,7 +38,7 @@ func (u *Users) Serve() {
 
 func (u *Users) Wire(repliers Repliers) {
 	for _, replier := range repliers {
-		u.Amqp.RPCReply(replier.RoutingKey, replier.Handler(u))
+		u.Amqp.DirectReply(replier.RoutingKey, replier.Handler(u))
 	}
-	// u.Amqp.RPCReply(amqp.CreateUserKey, users.CreateUser)
+	// u.Amqp.DirectReply(amqp.CreateUserKey, users.CreateUser)
 }

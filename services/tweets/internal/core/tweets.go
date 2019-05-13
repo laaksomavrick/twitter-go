@@ -39,6 +39,6 @@ func (u *TweetsService) Serve() {
 
 func (u *TweetsService) Wire(repliers Repliers) {
 	for _, replier := range repliers {
-		u.Amqp.RPCReply(replier.RoutingKey, replier.Handler(u))
+		u.Amqp.DirectReply(replier.RoutingKey, replier.Handler(u))
 	}
 }

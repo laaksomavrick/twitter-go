@@ -32,7 +32,7 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		res, rpcErr := s.Amqp.RPCRequest(amqp.CreateTweetKey, createTweetDto)
+		res, rpcErr := s.Amqp.DirectRequest(amqp.CreateTweetKey, createTweetDto)
 
 		if rpcErr != nil {
 			core.EncodeJSONError(w, errors.New(rpcErr.Message), rpcErr.Status)
@@ -63,7 +63,7 @@ func GetAllUserTweets(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		res, rpcErr := s.Amqp.RPCRequest(amqp.GetAllUserTweetsKey, getAllUserTweetsDto)
+		res, rpcErr := s.Amqp.DirectRequest(amqp.GetAllUserTweetsKey, getAllUserTweetsDto)
 
 		if rpcErr != nil {
 			core.EncodeJSONError(w, errors.New(rpcErr.Message), rpcErr.Status)

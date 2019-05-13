@@ -11,6 +11,8 @@ import (
 	"github.com/streadway/amqp"
 )
 
+const exchange = "twtr"
+
 // TODO-6: handle disconnects from rmqp
 
 // Client wraps common amqp operations
@@ -62,14 +64,14 @@ func NewClient(url string, port string) (*Client, error) {
 	}, nil
 }
 
-// RPCRequest send a direct reply message to the given routingKey,
+// DirectRequest send a direct reply message to the given routingKey,
 // receiving and returning a response
-func (client *Client) RPCRequest(routingKey string, payload interface{}) (res []byte, rpcError *RPCError) {
+func (client *Client) DirectRequest(routingKey string, payload interface{}) (res []byte, rpcError *RPCError) {
 	bytes, err := json.Marshal(payload)
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "RPCRequest",
+			Caller:  "DirectRequest",
 			Message: "An error occurred parsing the payload to a byte array",
 			Data: map[string]interface{}{
 				"payload": payload,
@@ -94,7 +96,7 @@ func (client *Client) RPCRequest(routingKey string, payload interface{}) (res []
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "RPCRequest",
+			Caller:  "DirectRequest",
 			Message: "Failed to publish a message",
 			Data: map[string]interface{}{
 				"routingKey": routingKey,
@@ -119,9 +121,9 @@ func (client *Client) RPCRequest(routingKey string, payload interface{}) (res []
 	return res, nil
 }
 
-// RPCReply applies a given function as a callback on a given routingKey for processing,
+// DirectReply applies a given function as a callback on a given routingKey for processing,
 // directly replying with the result
-func (client *Client) RPCReply(routingKey string, callback func([]byte) interface{}) {
+func (client *Client) DirectReply(routingKey string, callback func([]byte) interface{}) {
 	q, err := client.channel.QueueDeclare(
 		routingKey, // name
 		false,      // durable
@@ -133,7 +135,7 @@ func (client *Client) RPCReply(routingKey string, callback func([]byte) interfac
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "RPCReply",
+			Caller:  "DirectReply",
 			Message: "An error occurred initializing a queue",
 			Data: map[string]interface{}{
 				"routingKey": routingKey,
@@ -150,7 +152,7 @@ func (client *Client) RPCReply(routingKey string, callback func([]byte) interfac
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "RPCReply",
+			Caller:  "DirectReply",
 			Message: "An error occurred setting QoS",
 			Data: map[string]interface{}{
 				"routingKey": routingKey,
@@ -171,7 +173,7 @@ func (client *Client) RPCReply(routingKey string, callback func([]byte) interfac
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "RPCReply",
+			Caller:  "DirectReply",
 			Message: "An error occurred registering a consumer",
 			Data: map[string]interface{}{
 				"routingKey": routingKey,
@@ -189,7 +191,7 @@ func (client *Client) RPCReply(routingKey string, callback func([]byte) interfac
 
 			if err != nil {
 				logger.Error(logger.Loggable{
-					Caller:  "RPCReply",
+					Caller:  "DirectReply",
 					Message: "An error occurred parsing the payload to a byte array",
 					Data: map[string]interface{}{
 						"payload": payload,
@@ -211,7 +213,7 @@ func (client *Client) RPCReply(routingKey string, callback func([]byte) interfac
 
 			if err != nil {
 				logger.Error(logger.Loggable{
-					Caller:  "RPCReply",
+					Caller:  "DirectReply",
 					Message: "An error occurred publishing a message",
 					Data: map[string]interface{}{
 						"routingKey": routingKey,
@@ -223,6 +225,145 @@ func (client *Client) RPCReply(routingKey string, callback func([]byte) interfac
 			}
 
 			d.Ack(false)
+		}
+	}()
+}
+
+// PublishToTopic publishes a message to the given routing key on a topic exchange
+func (client *Client) PublishToTopic(routingKey string, keyValues []string, payload interface{}) *RPCError {
+	bytes, err := json.Marshal(payload)
+	interpolatedRoutingKey := interpolateRoutingKey(routingKey, keyValues)
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Caller:  "Publish",
+			Message: "An error occurred parsing the payload to a byte array",
+			Data: map[string]interface{}{
+				"payload": payload,
+			},
+		})
+		return &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+	}
+
+	err = client.channel.ExchangeDeclare(
+		exchange, // name
+		"topic",  // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
+	)
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Caller:  "Publish",
+			Message: "An error occurred declaring the exchange",
+			Data: map[string]interface{}{
+				"payload": payload,
+			},
+		})
+		return &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+	}
+
+	err = client.channel.Publish(
+		exchange,               // exchange
+		interpolatedRoutingKey, // routing key
+		false,                  // mandatory
+		false,                  // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        bytes,
+		})
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Caller:  "Publish",
+			Message: "Failed to publish a message",
+			Data: map[string]interface{}{
+				"routingKey": interpolatedRoutingKey,
+				"body":       payload,
+			},
+		})
+		return &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+	}
+
+	return nil
+
+}
+
+// ConsumeFromTopic calls a callback for all messages sent to a given routingKey on a topic exchange
+func (client *Client) ConsumeFromTopic(routingKey string, callback func([]byte)) {
+	err := client.channel.ExchangeDeclare(
+		exchange, // name
+		"topic",  // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
+	)
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Caller:  "ConsumeFromTopic",
+			Message: "An error occurred declaring the exchange",
+			Data: map[string]interface{}{
+				routingKey: routingKey,
+			},
+		})
+	}
+
+	q, err := client.channel.QueueDeclare(
+		routingKey, // name
+		false,      // durable
+		false,      // delete when unused
+		true,       // exclusive
+		false,      // no-wait
+		nil,        // arguments
+	)
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Caller:  "ConsumeFromTopic",
+			Message: "An error occurred declaring the queue",
+			Data: map[string]interface{}{
+				routingKey: routingKey,
+			},
+		})
+	}
+
+	err = client.channel.QueueBind(
+		q.Name,     // queue name
+		routingKey, // routing key
+		exchange,   // exchange
+		false,
+		nil,
+	)
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Caller:  "ConsumeFromTopic",
+			Message: "An error occurred binding the queue",
+			Data: map[string]interface{}{
+				routingKey: routingKey,
+			},
+		})
+	}
+
+	msgs, err := client.channel.Consume(
+		q.Name, // queue
+		"",     // consumer
+		true,   // auto ack
+		false,  // exclusive
+		false,  // no local
+		false,  // no wait
+		nil,    // args
+	)
+
+	go func() {
+		for d := range msgs {
+			callback(d.Body)
 		}
 	}()
 }

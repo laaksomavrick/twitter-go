@@ -22,13 +22,15 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		if errs := createTweetDto.Validate(); len(errs) > 0 {
-			core.EncodeJSONErrors(w, errs, http.StatusBadRequest)
+		if jwtUsername == "" {
+			core.EncodeJSONError(w, errors.New(core.Forbidden), http.StatusForbidden)
 			return
 		}
 
-		if jwtUsername != createTweetDto.Username {
-			core.EncodeJSONError(w, errors.New(core.Forbidden), http.StatusForbidden)
+		createTweetDto.Username = jwtUsername
+
+		if errs := createTweetDto.Validate(); len(errs) > 0 {
+			core.EncodeJSONErrors(w, errs, http.StatusBadRequest)
 			return
 		}
 

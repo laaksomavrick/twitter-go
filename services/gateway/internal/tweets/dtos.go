@@ -3,7 +3,7 @@ package tweets
 import "net/url"
 
 type CreateTweetDto struct {
-	Username string `json:"username"`
+	Username string
 	Content  string `json:"content"`
 }
 

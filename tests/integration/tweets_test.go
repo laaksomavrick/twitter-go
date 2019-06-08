@@ -15,6 +15,7 @@ import (
 type TweetsTestSuite struct {
 	helpers.IntegrationTestSuite
 	UserA map[string]interface{}
+	UserB map[string]interface{}
 }
 
 func (suite *TweetsTestSuite) SetupSuite() {
@@ -24,7 +25,7 @@ func (suite *TweetsTestSuite) SetupSuite() {
 	suite.Truncate([]string{"users", "tweets", "tweets_by_user"})
 
 	// Create a new user
-	statusCode, user := suite.CreateUserViaHTTP(map[string]string{
+	statusCode, userA := suite.CreateUserViaHTTP(map[string]string{
 		"username":             "username",
 		"password":             "password",
 		"passwordConfirmation": "password",
@@ -36,40 +37,56 @@ func (suite *TweetsTestSuite) SetupSuite() {
 		suite.Fail("Unable to create a user for tweets_test")
 	}
 
-	suite.UserA = user
+	suite.UserA = userA
+
+	// Create another new user
+	statusCode, userB := suite.CreateUserViaHTTP(map[string]string{
+		"username":             "username2",
+		"password":             "password",
+		"passwordConfirmation": "password",
+		"email":                "email2@gmail.com",
+		"displayName":          "displayName2",
+	})
+
+	if statusCode != 200 {
+		suite.Fail("Unable to create a user for tweets_test")
+	}
+
+	suite.UserB = userB
 }
 
 func (suite *TweetsTestSuite) TestCreateTweetSuccess() {
+	accessToken := suite.UserA["accessToken"].(string)
 	statusCode, createTweetResponse := suite.createTweetViaHTTP(map[string]string{
-		"username": suite.getUsername(),
-		"content":  "this is a tweet",
-	})
+		"content": "this is a tweet",
+	}, accessToken)
 
 	assert.Equal(suite.T(), 200, statusCode)
 	assert.NotNil(suite.T(), createTweetResponse["content"])
 	assert.NotNil(suite.T(), createTweetResponse["id"])
 }
 
-func (suite *TweetsTestSuite) TestCreateTweetForbidden() {
+func (suite *TweetsTestSuite) TestCreateTweetNotAuthorized() {
+	accessToken := ""
 	statusCode, _ := suite.createTweetViaHTTP(map[string]string{
-		"username": "someInvalidUsername",
-		"content":  "this is a tweet",
-	})
+		"content": "this is a tweet",
+	}, accessToken)
 
-	assert.Equal(suite.T(), 403, statusCode)
+	assert.Equal(suite.T(), 401, statusCode)
 }
 
 func (suite *TweetsTestSuite) TestCreateTweetInvalid() {
+	accessToken := suite.UserA["accessToken"].(string)
 	statusCode, _ := suite.createTweetViaHTTP(map[string]string{
-		"username": suite.getUsername(),
-		"content":  "",
-	})
+		"content": "",
+	}, accessToken)
 
 	assert.Equal(suite.T(), 400, statusCode)
 }
 
 func (suite *TweetsTestSuite) TestGetTweetsSuccess() {
-	statusCode, _ := suite.getTweetsViaHTTP(suite.getUsername())
+	username := suite.UserA["username"].(string)
+	statusCode, _ := suite.getTweetsViaHTTP(username)
 	assert.Equal(suite.T(), 200, statusCode)
 }
 
@@ -82,20 +99,12 @@ func TestTweetsTestSuite(t *testing.T) {
 	suite.Run(t, new(TweetsTestSuite))
 }
 
-func (suite *TweetsTestSuite) getUsername() string {
-	return suite.UserA["username"].(string)
-}
-
-func (suite *TweetsTestSuite) getAccessToken() string {
-	return suite.UserA["accessToken"].(string)
-}
-
-func (suite *TweetsTestSuite) createTweetViaHTTP(request map[string]string) (statusCode int, createTweetResponse map[string]interface{}) {
+func (suite *TweetsTestSuite) createTweetViaHTTP(request map[string]string, accessToken string) (statusCode int, createTweetResponse map[string]interface{}) {
 	marshalled, _ := json.Marshal(request)
 	body := bytes.NewBuffer(marshalled)
 	req, _ := http.NewRequest("POST", suite.GetBaseURLWithSuffix("/tweets"), body)
 
-	req.Header.Add("Authorization", "Bearer "+suite.getAccessToken())
+	req.Header.Add("Authorization", "Bearer "+accessToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

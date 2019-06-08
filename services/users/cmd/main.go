@@ -3,11 +3,14 @@ package main
 import (
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/cassandra"
+	"twitter-go/services/common/logger"
 	"twitter-go/services/users/internal/core"
 	"twitter-go/services/users/internal/users"
 )
 
 func main() {
+	logger.Init()
+
 	config := core.NewConfig()
 
 	amqp, err := amqp.NewClient(config.AmqpURL, config.AmqpPort)

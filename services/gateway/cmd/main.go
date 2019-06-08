@@ -2,12 +2,16 @@ package main
 
 import (
 	"twitter-go/services/common/amqp"
+	"twitter-go/services/common/logger"
 	"twitter-go/services/gateway/internal/core"
 	"twitter-go/services/gateway/internal/tweets"
 	"twitter-go/services/gateway/internal/users"
 )
 
 func main() {
+
+	logger.Init()
+
 	// load all the required env values
 	config := core.NewConfig()
 

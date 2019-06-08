@@ -90,7 +90,6 @@ func AuthorizeHandler(s *core.Gateway) http.HandlerFunc {
 
 func handleError(w http.ResponseWriter, err error, caller string, msg string, status int) {
 	logger.Error(logger.Loggable{
-		Caller:  caller,
 		Message: msg,
 		Data: map[string]interface{}{
 			"error": err.Error(),

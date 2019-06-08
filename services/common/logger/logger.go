@@ -1,9 +1,9 @@
 package logger
 
 import (
-	"encoding/json"
-	"log"
 	"twitter-go/services/common/env"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var logLevelMappingTable = map[string]int{
@@ -15,45 +15,48 @@ var logLevelMappingTable = map[string]int{
 
 // Loggable defines the shape of a message output to std
 type Loggable struct {
-	Caller  string
 	Message string
 	Data    map[string]interface{}
 }
 
+// Init initializes the logger configuration
+func Init() {}
+
 // Debug logs loggable data with a level of debug
 func Debug(loggable Loggable) {
-	logForLevel("Debug", loggable)
+	ok := logForLevel("Debug", loggable)
+	if ok {
+		log.WithFields(loggable.Data).Debug(loggable.Message)
+	}
 }
 
 // Info logs loggable data with a level of info
 func Info(loggable Loggable) {
-	logForLevel("Info", loggable)
+	ok := logForLevel("Info", loggable)
+	if ok {
+		log.WithFields(loggable.Data).Info(loggable.Message)
+	}
 }
 
 // Warning logs loggable data with a level of warning
 func Warning(loggable Loggable) {
-	logForLevel("Warning", loggable)
+	ok := logForLevel("Warning", loggable)
+	if ok {
+		log.WithFields(loggable.Data).Warn(loggable.Message)
+	}
 }
 
 // Error logs loggable data with a level of error
 func Error(loggable Loggable) {
-	logForLevel("Error", loggable)
+	ok := logForLevel("Error", loggable)
+	if ok {
+		log.WithFields(loggable.Data).Error(loggable.Message)
+	}
 }
 
-// TODO-12: make this similar to cassandra logger
-// Give each request a uuid for tracing?
-func logForLevel(logLevel string, loggable Loggable) {
+func logForLevel(logLevel string, loggable Loggable) bool {
 	envLogLevel := env.GetEnv("LOG_LEVEL", "debug")
 	envLogLevelInt := logLevelMappingTable[envLogLevel]
 	logLevelInt := logLevelMappingTable[logLevel]
-	if envLogLevelInt <= logLevelInt {
-		json, _ := json.MarshalIndent(loggable.Data, "", "\t")
-		log.Printf(
-			"%s\nCaller: %s\nMessage: %s\n%+v\n",
-			logLevel,
-			loggable.Caller,
-			loggable.Message,
-			string(json),
-		)
-	}
+	return envLogLevelInt <= logLevelInt
 }

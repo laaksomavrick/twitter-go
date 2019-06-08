@@ -14,6 +14,7 @@ import (
 const exchange = "twtr"
 
 // TODO-6: handle disconnects from rmqp
+// TODO-17: refactor common ops
 
 // Client wraps common amqp operations
 type Client struct {
@@ -72,7 +73,6 @@ func (client *Client) DirectRequest(routingKey string, routingKeyValues []string
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "DirectRequest",
 			Message: "An error occurred parsing the payload to a byte array",
 			Data: map[string]interface{}{
 				"payload": payload,
@@ -97,7 +97,6 @@ func (client *Client) DirectRequest(routingKey string, routingKeyValues []string
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "DirectRequest",
 			Message: "Failed to publish a message",
 			Data: map[string]interface{}{
 				"routingKey": interpolatedRoutingKey,
@@ -137,10 +136,9 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "ConsumeFromTopic",
 			Message: "An error occurred declaring the exchange",
 			Data: map[string]interface{}{
-				routingKey: routingKey,
+				"routingKey": routingKey,
 			},
 		})
 	}
@@ -156,7 +154,6 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "DirectReply",
 			Message: "An error occurred initializing a queue",
 			Data: map[string]interface{}{
 				"routingKey": routingKey,
@@ -175,7 +172,6 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "DirectReply",
 			Message: "An error occurred binding a queue",
 			Data: map[string]interface{}{
 				"routingKey": routingKey,
@@ -192,7 +188,6 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "DirectReply",
 			Message: "An error occurred setting QoS",
 			Data: map[string]interface{}{
 				"routingKey": routingKey,
@@ -213,7 +208,6 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "DirectReply",
 			Message: "An error occurred registering a consumer",
 			Data: map[string]interface{}{
 				"routingKey": routingKey,
@@ -231,7 +225,6 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 
 			if err != nil {
 				logger.Error(logger.Loggable{
-					Caller:  "DirectReply",
 					Message: "An error occurred parsing the payload to a byte array",
 					Data: map[string]interface{}{
 						"payload": payload,
@@ -253,7 +246,6 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 
 			if err != nil {
 				logger.Error(logger.Loggable{
-					Caller:  "DirectReply",
 					Message: "An error occurred publishing a message",
 					Data: map[string]interface{}{
 						"routingKey": routingKey,
@@ -276,7 +268,6 @@ func (client *Client) PublishToTopic(routingKey string, keyValues []string, payl
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "Publish",
 			Message: "An error occurred parsing the payload to a byte array",
 			Data: map[string]interface{}{
 				"payload": payload,
@@ -297,7 +288,6 @@ func (client *Client) PublishToTopic(routingKey string, keyValues []string, payl
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "Publish",
 			Message: "An error occurred declaring the exchange",
 			Data: map[string]interface{}{
 				"payload": payload,
@@ -318,7 +308,6 @@ func (client *Client) PublishToTopic(routingKey string, keyValues []string, payl
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "Publish",
 			Message: "Failed to publish a message",
 			Data: map[string]interface{}{
 				"routingKey": interpolatedRoutingKey,
@@ -346,10 +335,9 @@ func (client *Client) ConsumeFromTopic(routingKey string, callback func([]byte))
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "ConsumeFromTopic",
 			Message: "An error occurred declaring the exchange",
 			Data: map[string]interface{}{
-				routingKey: routingKey,
+				"routingKey": routingKey,
 			},
 		})
 	}
@@ -365,10 +353,9 @@ func (client *Client) ConsumeFromTopic(routingKey string, callback func([]byte))
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "ConsumeFromTopic",
 			Message: "An error occurred declaring the queue",
 			Data: map[string]interface{}{
-				routingKey: routingKey,
+				"routingKey": routingKey,
 			},
 		})
 	}
@@ -383,10 +370,9 @@ func (client *Client) ConsumeFromTopic(routingKey string, callback func([]byte))
 
 	if err != nil {
 		logger.Error(logger.Loggable{
-			Caller:  "ConsumeFromTopic",
 			Message: "An error occurred binding the queue",
 			Data: map[string]interface{}{
-				routingKey: routingKey,
+				"routingKey": routingKey,
 			},
 		})
 	}

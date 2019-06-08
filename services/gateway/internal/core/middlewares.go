@@ -76,9 +76,8 @@ func LogRequest(name string) Middleware {
 			lw := HttpLogWriter{ResponseWriter: w}
 			f(&lw, r)
 			duration := time.Since(start)
-			userID := r.Context().Value("userID")
+			username := r.Context().Value("username")
 			info := logger.Loggable{
-				Caller: "LogRequest",
 				Data: map[string]interface{}{
 					"host":             r.Host,
 					"remoteAddr":       r.RemoteAddr,
@@ -86,11 +85,12 @@ func LogRequest(name string) Middleware {
 					"requestURI":       r.RequestURI,
 					"userAgent":        r.Header.Get("User-Agent"),
 					"responseDuration": duration,
-					"userID":           userID,
+					"username":         username,
 					"responseBody":     string(lw.body),
 					"responseStatus":   lw.status,
 					"length":           lw.length,
 				},
+				Message: "Logging HTTP request.",
 			}
 			logger.Info(info)
 		}

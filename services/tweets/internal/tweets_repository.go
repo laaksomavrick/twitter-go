@@ -1,4 +1,4 @@
-package tweets
+package internal
 
 import (
 	"net/http"

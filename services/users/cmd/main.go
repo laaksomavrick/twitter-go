@@ -3,15 +3,16 @@ package main
 import (
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/cassandra"
+	"twitter-go/services/common/config"
 	"twitter-go/services/common/logger"
-	"twitter-go/services/users/internal/core"
-	"twitter-go/services/users/internal/users"
+	"twitter-go/services/common/service"
+	"twitter-go/services/users/internal"
 )
 
 func main() {
 	logger.Init()
 
-	config := core.NewConfig()
+	config := config.NewServiceConfig()
 
 	amqp, err := amqp.NewClient(config.AmqpURL, config.AmqpPort)
 
@@ -25,7 +26,7 @@ func main() {
 		panic(err)
 	}
 
-	service := core.NewUsers(amqp, cassandra, config)
+	service := service.NewService("Users", amqp, cassandra, config)
 
-	service.Init(users.Repliers)
+	service.Init(internal.Repliers)
 }

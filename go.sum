@@ -17,6 +17,8 @@ github.com/gorilla/mux v1.7.1/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2z
 github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed h1:5upAirOpQc1Q53c0bnx2ufif5kANL7bfZWcc6VJWJd8=
 github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed/go.mod h1:tMWxXQ9wFIaZeTI9F+hmhFiGpFmhOHzyShyFUhRm0H4=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
+github.com/laaksomavrick/goals-api v0.0.0-20181206032021-ded7f87c6c00 h1:h0VuOOLmcTYthg55kQ8ycuB9yf22uTKKSSAM51rxUc4=
+github.com/laaksomavrick/goals-api v0.0.0-20181206032021-ded7f87c6c00/go.mod h1:moV3K3d6cb8UNDg43KbkBgnlOz+RIXWkFJIuUHHfAps=
 github.com/laaksomavrick/twitter-go v0.0.0-20190424234031-df205316dc37 h1:Cumwdr6ccsnToh6e1AxgJixM7XoTVjOsjQPds4X/g/s=
 github.com/laaksomavrick/twitter-go v0.0.0-20190426015520-9ff312a49bc6 h1:bmoA5IMqOaakWlP45uUfeLZxAIWnaZ+Y0LS9i1YXsa8=
 github.com/laaksomavrick/twitter-go v0.0.0-20190504180011-2496ad53e337 h1:L4rPM6AURACtSPSSJS87dnujPPQNJzCQsULTHq+HtsQ=

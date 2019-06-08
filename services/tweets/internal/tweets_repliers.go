@@ -1,17 +1,17 @@
-package tweets
+package internal
 
 import (
 	"twitter-go/services/common/amqp"
-	"twitter-go/services/tweets/internal/core"
+	"twitter-go/services/common/service"
 )
 
 // Repliers maps routing keys to handlers
-var Repliers = core.Repliers{
-	core.Replier{
+var Repliers = service.Repliers{
+	service.Replier{
 		RoutingKey: amqp.CreateTweetKey,
 		Handler:    CreateHandler,
 	},
-	core.Replier{
+	service.Replier{
 		RoutingKey: amqp.GetAllUserTweetsKey,
 		Handler:    GetAllHandler,
 	},

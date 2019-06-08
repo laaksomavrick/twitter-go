@@ -1,15 +1,15 @@
-package users
+package internal
 
 import (
 	"encoding/json"
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/auth"
-	"twitter-go/services/users/internal/core"
+	"twitter-go/services/common/service"
 )
 
 // CreateHandler handles creating a user record
-func CreateHandler(u *core.Users) func([]byte) interface{} {
+func CreateHandler(s *service.Service) func([]byte) interface{} {
 	return func(msg []byte) interface{} {
 		var user User
 
@@ -21,12 +21,12 @@ func CreateHandler(u *core.Users) func([]byte) interface{} {
 			return amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
 		}
 
-		repo := NewUsersRepository(u.Cassandra)
+		repo := NewUsersRepository(s.Cassandra)
 		if err := repo.Insert(user); err != nil {
 			return err
 		}
 
-		accessToken, err := auth.GenerateToken(user.Username, u.Config.HmacSecret)
+		accessToken, err := auth.GenerateToken(user.Username, s.Config.HMACSecret)
 		if err != nil {
 			return amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
 		}
@@ -41,7 +41,7 @@ func CreateHandler(u *core.Users) func([]byte) interface{} {
 }
 
 // AuthorizeHandler handles authorizing a user given their username and password
-func AuthorizeHandler(u *core.Users) func([]byte) interface{} {
+func AuthorizeHandler(s *service.Service) func([]byte) interface{} {
 	return func(msg []byte) interface{} {
 
 		var authorizeDto AuthorizeDto
@@ -51,7 +51,7 @@ func AuthorizeHandler(u *core.Users) func([]byte) interface{} {
 		}
 
 		// find user from given username
-		repo := NewUsersRepository(u.Cassandra)
+		repo := NewUsersRepository(s.Cassandra)
 		userRecord, amqpErr := repo.FindByUsername(authorizeDto.Username)
 		if amqpErr != nil {
 			return amqpErr
@@ -63,7 +63,7 @@ func AuthorizeHandler(u *core.Users) func([]byte) interface{} {
 		}
 
 		// return new accessToken and refreshToken from record
-		accessToken, err := auth.GenerateToken(authorizeDto.Username, u.Config.HmacSecret)
+		accessToken, err := auth.GenerateToken(authorizeDto.Username, s.Config.HMACSecret)
 		if err != nil {
 			return amqp.RPCError{Message: "Something went wrong", Status: http.StatusInternalServerError}
 		}

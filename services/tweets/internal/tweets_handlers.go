@@ -1,14 +1,14 @@
-package tweets
+package internal
 
 import (
 	"encoding/json"
 	"net/http"
 	"twitter-go/services/common/amqp"
-	"twitter-go/services/tweets/internal/core"
+	"twitter-go/services/common/service"
 )
 
 // CreateHandler handles creating a tweet record
-func CreateHandler(t *core.TweetsService) func([]byte) interface{} {
+func CreateHandler(s *service.Service) func([]byte) interface{} {
 	return func(msg []byte) interface{} {
 
 		var tweet Tweet
@@ -19,19 +19,19 @@ func CreateHandler(t *core.TweetsService) func([]byte) interface{} {
 
 		tweet.prepareForInsert()
 
-		repo := NewRepository(t.Cassandra)
+		repo := NewRepository(s.Cassandra)
 		if err := repo.Insert(tweet); err != nil {
 			return err
 		}
 
-		t.Amqp.PublishToTopic(amqp.CreatedTweetKey, []string{tweet.Username}, tweet)
+		s.Amqp.PublishToTopic(amqp.CreatedTweetKey, []string{tweet.Username}, tweet)
 
 		return tweet
 	}
 }
 
 // GetAllHandler handles returning all tweets for a given username
-func GetAllHandler(t *core.TweetsService) func([]byte) interface{} {
+func GetAllHandler(s *service.Service) func([]byte) interface{} {
 	return func(msg []byte) interface{} {
 		var req GetAllUserTweets
 
@@ -39,7 +39,7 @@ func GetAllHandler(t *core.TweetsService) func([]byte) interface{} {
 			return amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
 		}
 
-		repo := NewRepository(t.Cassandra)
+		repo := NewRepository(s.Cassandra)
 		tweets, err := repo.GetAll(req.Username)
 		if err != nil {
 			return err

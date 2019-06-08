@@ -14,7 +14,6 @@ import (
 const exchange = "twtr"
 
 // TODO-6: handle disconnects from rmqp
-// TODO-17: refactor common ops
 
 // Client wraps common amqp operations
 type Client struct {
@@ -124,59 +123,15 @@ func (client *Client) DirectRequest(routingKey string, routingKeyValues []string
 // DirectReply applies a given function as a callback on a given routingKey for processing,
 // directly replying with the result
 func (client *Client) DirectReply(routingKey string, callback func([]byte) interface{}) {
-	err := client.channel.ExchangeDeclare(
-		exchange, // name
-		"topic",  // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
-	)
+	client.declareExchange(routingKey)
 
+	q, err := client.declareQueue(routingKey)
 	if err != nil {
-		logger.Error(logger.Loggable{
-			Message: "An error occurred declaring the exchange",
-			Data: map[string]interface{}{
-				"routingKey": routingKey,
-			},
-		})
-	}
-
-	q, err := client.channel.QueueDeclare(
-		routingKey, // name
-		false,      // durable
-		false,      // delete when unused
-		false,      // exclusive
-		false,      // no-wait
-		nil,        // arguments
-	)
-
-	if err != nil {
-		logger.Error(logger.Loggable{
-			Message: "An error occurred initializing a queue",
-			Data: map[string]interface{}{
-				"routingKey": routingKey,
-			},
-		})
 		return
 	}
 
-	err = client.channel.QueueBind(
-		q.Name,     // queue name
-		routingKey, // routing key
-		exchange,   // exchange
-		false,
-		nil,
-	)
-
+	err = client.bindQueue(routingKey, q)
 	if err != nil {
-		logger.Error(logger.Loggable{
-			Message: "An error occurred binding a queue",
-			Data: map[string]interface{}{
-				"routingKey": routingKey,
-			},
-		})
 		return
 	}
 
@@ -276,25 +231,7 @@ func (client *Client) PublishToTopic(routingKey string, keyValues []string, payl
 		return &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
-	err = client.channel.ExchangeDeclare(
-		exchange, // name
-		"topic",  // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
-	)
-
-	if err != nil {
-		logger.Error(logger.Loggable{
-			Message: "An error occurred declaring the exchange",
-			Data: map[string]interface{}{
-				"payload": payload,
-			},
-		})
-		return &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
-	}
+	client.declareExchange(routingKey)
 
 	err = client.channel.Publish(
 		exchange,               // exchange
@@ -323,58 +260,16 @@ func (client *Client) PublishToTopic(routingKey string, keyValues []string, payl
 
 // ConsumeFromTopic calls a callback for all messages sent to a given routingKey on a topic exchange
 func (client *Client) ConsumeFromTopic(routingKey string, callback func([]byte)) {
-	err := client.channel.ExchangeDeclare(
-		exchange, // name
-		"topic",  // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
-	)
+	client.declareExchange(routingKey)
 
+	q, err := client.declareQueue(routingKey)
 	if err != nil {
-		logger.Error(logger.Loggable{
-			Message: "An error occurred declaring the exchange",
-			Data: map[string]interface{}{
-				"routingKey": routingKey,
-			},
-		})
+		return
 	}
 
-	q, err := client.channel.QueueDeclare(
-		routingKey, // name
-		false,      // durable
-		false,      // delete when unused
-		true,       // exclusive
-		false,      // no-wait
-		nil,        // arguments
-	)
-
+	err = client.bindQueue(routingKey, q)
 	if err != nil {
-		logger.Error(logger.Loggable{
-			Message: "An error occurred declaring the queue",
-			Data: map[string]interface{}{
-				"routingKey": routingKey,
-			},
-		})
-	}
-
-	err = client.channel.QueueBind(
-		q.Name,     // queue name
-		routingKey, // routing key
-		exchange,   // exchange
-		false,
-		nil,
-	)
-
-	if err != nil {
-		logger.Error(logger.Loggable{
-			Message: "An error occurred binding the queue",
-			Data: map[string]interface{}{
-				"routingKey": routingKey,
-			},
-		})
+		return
 	}
 
 	msgs, err := client.channel.Consume(
@@ -392,4 +287,69 @@ func (client *Client) ConsumeFromTopic(routingKey string, callback func([]byte))
 			callback(d.Body)
 		}
 	}()
+}
+
+func (client *Client) declareExchange(routingKey string) {
+	err := client.channel.ExchangeDeclare(
+		exchange, // name
+		"topic",  // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
+	)
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Message: "An error occurred declaring an exchange",
+			Data: map[string]interface{}{
+				"routingKey": routingKey,
+			},
+		})
+	}
+}
+
+func (client *Client) declareQueue(routingKey string) (*amqp.Queue, error) {
+	q, err := client.channel.QueueDeclare(
+		routingKey, // name
+		false,      // durable
+		false,      // delete when unused
+		false,      // exclusive
+		false,      // no-wait
+		nil,        // arguments
+	)
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Message: "An error occurred initializing a queue",
+			Data: map[string]interface{}{
+				"routingKey": routingKey,
+			},
+		})
+		return nil, err
+	}
+
+	return &q, nil
+}
+
+func (client *Client) bindQueue(routingKey string, q *amqp.Queue) error {
+	err := client.channel.QueueBind(
+		q.Name,     // queue name
+		routingKey, // routing key
+		exchange,   // exchange
+		false,
+		nil,
+	)
+
+	if err != nil {
+		logger.Error(logger.Loggable{
+			Message: "An error occurred binding a queue",
+			Data: map[string]interface{}{
+				"routingKey": routingKey,
+			},
+		})
+		return err
+	}
+	return nil
 }

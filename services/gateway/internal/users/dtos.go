@@ -79,3 +79,7 @@ func (dto *AuthenticateUserDto) Validate() url.Values {
 
 	return errs
 }
+
+type ExistsUserDto struct {
+	Username string `json:"username"`
+}

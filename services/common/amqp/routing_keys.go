@@ -3,6 +3,7 @@ package amqp
 const (
 	CreateUserKey       = "twtr.users.create"
 	AuthorizeUserKey    = "twtr.*.authorize"
+	ExistsUserKey       = "twtr.*.exists"
 	CreateTweetKey      = "twtr.*.tweets.create"
 	CreatedTweetKey     = "twtr.*.tweets.created"
 	GetAllUserTweetsKey = "twtr.*.tweets.get-all"

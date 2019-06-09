@@ -15,4 +15,8 @@ var Repliers = service.Repliers{
 		RoutingKey: amqp.AuthorizeUserKey,
 		Handler:    AuthorizeHandler,
 	},
+	service.Replier{
+		RoutingKey: amqp.ExistsUserKey,
+		Handler:    ExistsHandler,
+	},
 }

@@ -44,3 +44,11 @@ type AuthorizeResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
+
+type ExistsDto struct {
+	Username string `json:"username"`
+}
+
+type ExistsResponse struct {
+	Exists bool `json:"exists"`
+}

@@ -43,13 +43,11 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		}
 
 		user.AccessToken = accessToken
-
 		user.sanitize()
 
 		body, _ := json.Marshal(user)
 
 		return &amqp.OkResponse{Body: body}, nil
-
 	}
 
 }
@@ -57,7 +55,6 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 // AuthorizeHandler handles authorizing a user given their username and password
 func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
-
 		var authorizeDto AuthorizeDto
 
 		if err := json.Unmarshal(msg, &authorizeDto); err != nil {
@@ -90,18 +87,36 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 		body, _ := json.Marshal(authorized)
 
 		return &amqp.OkResponse{Body: body}, nil
-
 	}
 }
 
-// exists handler
+// ExistsHandler verifies a user exists in the system
+func ExistsHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
+	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
+		var existsDto ExistsDto
 
-// exists, err := repo.Exists(req.Username)
+		if err := json.Unmarshal(msg, &existsDto); err != nil {
+			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+		}
 
-// if err != nil {
-// 	return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
-// }
+		repo := NewRepository(s.Cassandra)
 
-// if exists == false {
-// 	return nil, &amqp.ErrorResponse{Message: "User not found", Status: http.StatusNotFound}
-// }
+		exists, err := repo.Exists(existsDto.Username)
+
+		if err != nil {
+			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+		}
+
+		if exists == false {
+			return nil, &amqp.ErrorResponse{Message: "User not found", Status: http.StatusNotFound}
+		}
+
+		existsResponse := ExistsResponse{
+			Exists: true,
+		}
+
+		body, _ := json.Marshal(existsResponse)
+
+		return &amqp.OkResponse{Body: body}, nil
+	}
+}

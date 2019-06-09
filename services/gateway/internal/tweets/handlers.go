@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/gateway/internal/core"
+	"twitter-go/services/gateway/internal/users"
 
 	"github.com/gorilla/mux"
 )
@@ -60,11 +61,24 @@ func GetAllUserTweets(s *core.Gateway) http.HandlerFunc {
 			Username: username,
 		}
 
+		existsUserDto := &users.ExistsUserDto{
+			Username: username,
+		}
+
 		if errs := getAllUserTweetsDto.Validate(); len(errs) > 0 {
 			core.EncodeJSONErrors(w, errs, http.StatusBadRequest)
 			return
 		}
 
+		// Check that the user exists
+		_, errorResponse := s.Amqp.DirectRequest(amqp.ExistsUserKey, []string{getAllUserTweetsDto.Username}, existsUserDto)
+
+		if errorResponse != nil {
+			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
+			return
+		}
+
+		// Get that user's tweets
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.GetAllUserTweetsKey, []string{getAllUserTweetsDto.Username}, getAllUserTweetsDto)
 
 		if errorResponse != nil {

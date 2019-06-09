@@ -14,7 +14,7 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		var user User
 
 		if err := json.Unmarshal(msg, &user); err != nil {
-			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+			return amqp.HandleInternalServiceError(err, map[string]interface{}{"user": user})
 		}
 
 		repo := NewRepository(s.Cassandra)
@@ -22,7 +22,7 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		exists, err := repo.Exists(user.Username)
 
 		if err != nil {
-			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+			return amqp.HandleInternalServiceError(err, map[string]interface{}{"user": user})
 		}
 
 		if exists == true {
@@ -30,16 +30,16 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		}
 
 		if err := user.prepareForInsert(); err != nil {
-			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+			return amqp.HandleInternalServiceError(err, map[string]interface{}{"user": user})
 		}
 
 		if err := repo.Insert(user); err != nil {
-			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+			return amqp.HandleInternalServiceError(err, map[string]interface{}{"user": user})
 		}
 
 		accessToken, err := auth.GenerateToken(user.Username, s.Config.HMACSecret)
 		if err != nil {
-			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+			return amqp.HandleInternalServiceError(err, map[string]interface{}{"user": user})
 		}
 
 		user.AccessToken = accessToken
@@ -58,7 +58,7 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 		var authorizeDto AuthorizeDto
 
 		if err := json.Unmarshal(msg, &authorizeDto); err != nil {
-			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+			return amqp.HandleInternalServiceError(err, map[string]interface{}{"authorizeDto": authorizeDto})
 		}
 
 		// find user from given username
@@ -76,7 +76,7 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 		// return new accessToken and refreshToken from record
 		accessToken, err := auth.GenerateToken(authorizeDto.Username, s.Config.HMACSecret)
 		if err != nil {
-			return nil, &amqp.ErrorResponse{Message: "Something went wrong", Status: http.StatusInternalServerError}
+			return amqp.HandleInternalServiceError(err, map[string]interface{}{"authorizeDto": authorizeDto})
 		}
 
 		authorized := AuthorizeResponse{
@@ -96,7 +96,7 @@ func ExistsHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		var existsDto ExistsDto
 
 		if err := json.Unmarshal(msg, &existsDto); err != nil {
-			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+			return amqp.HandleInternalServiceError(err, map[string]interface{}{"existsDto": existsDto})
 		}
 
 		repo := NewRepository(s.Cassandra)
@@ -104,7 +104,7 @@ func ExistsHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		exists, err := repo.Exists(existsDto.Username)
 
 		if err != nil {
-			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+			return amqp.HandleInternalServiceError(err, map[string]interface{}{"username": existsDto.Username})
 		}
 
 		if exists == false {

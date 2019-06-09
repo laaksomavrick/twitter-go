@@ -33,6 +33,14 @@ type ErrorResponse struct {
 	Status  int
 }
 
+func HandleInternalServiceError(err error, data map[string]interface{}) (*OkResponse, *ErrorResponse) {
+	logger.Error(logger.Loggable{
+		Message: err.Error(),
+		Data:    data,
+	})
+	return nil, &ErrorResponse{Message: "Internal server error", Status: http.StatusInternalServerError}
+}
+
 // NewClient constructs a new instance of a client
 func NewClient(url string, port string) (*Client, error) {
 	dial := fmt.Sprintf("%s:%s", url, port)

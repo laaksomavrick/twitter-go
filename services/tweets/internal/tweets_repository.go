@@ -1,9 +1,7 @@
 package internal
 
 import (
-	"net/http"
 	"time"
-	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/cassandra"
 
 	"github.com/gocql/gocql"
@@ -21,42 +19,28 @@ func NewRepository(cassandra *cassandra.Client) *Repository {
 	}
 }
 
-// TODO: extract some calls to seperate functions so handler can decide how to handle errs; these fns can return regular ers as a consequence and aren't coupled to handler
-
 // Insert creates tweet records to all relevant tables
-func (tr *Repository) Insert(t Tweet) *amqp.ErrorResponse {
-	err := tr.cassandra.Session.Query("INSERT INTO tweets (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content).Exec()
+func (r *Repository) Insert(t Tweet) error {
+	err := r.cassandra.Session.Query("INSERT INTO tweets (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content).Exec()
 	if err != nil {
-		return &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+		return err
 	}
 
-	err = tr.cassandra.Session.Query("INSERT INTO tweets_by_user (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content).Exec()
+	err = r.cassandra.Session.Query("INSERT INTO tweets_by_user (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content).Exec()
 	if err != nil {
-		return &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+		return err
 	}
 
 	return nil
 }
 
 // GetAll returns all tweets for the given username
-func (tr *Repository) GetAll(username string) (tweets []Tweet, errorResponse *amqp.ErrorResponse) {
+func (r *Repository) GetAll(username string) (tweets []Tweet, err error) {
 	var id gocql.UUID
 	var content string
 	var createdAt time.Time
-	exists := 0
 
-	// Check if user exists
-	err := tr.cassandra.Session.Query("SELECT count(*) FROM users WHERE username = ?", username).Scan(&exists)
-	if err != nil {
-		return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
-	}
-
-	if exists == 0 {
-		return nil, &amqp.ErrorResponse{Message: "User not found", Status: http.StatusNotFound}
-	}
-
-	// Get tweets
-	iter := tr.cassandra.Session.Query("SELECT id, username, content, created_at FROM tweets_by_user WHERE username = ?", username).Iter()
+	iter := r.cassandra.Session.Query("SELECT id, username, content, created_at FROM tweets_by_user WHERE username = ?", username).Iter()
 
 	for iter.Scan(&id, &username, &content, &createdAt) {
 		tweet := Tweet{
@@ -68,7 +52,7 @@ func (tr *Repository) GetAll(username string) (tweets []Tweet, errorResponse *am
 		tweets = append(tweets, tweet)
 	}
 	if err := iter.Close(); err != nil {
-		return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+		return nil, err
 	}
 
 	// if none found, make it an empty array

@@ -21,7 +21,7 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 
 		repo := NewRepository(s.Cassandra)
 		if err := repo.Insert(tweet); err != nil {
-			return nil, err
+			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 		}
 
 		s.Amqp.PublishToTopic(amqp.CreatedTweetKey, []string{tweet.Username}, tweet)
@@ -42,9 +42,10 @@ func GetAllHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		}
 
 		repo := NewRepository(s.Cassandra)
+
 		tweets, err := repo.GetAll(req.Username)
 		if err != nil {
-			return nil, err
+			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 		}
 
 		body, _ := json.Marshal(tweets)

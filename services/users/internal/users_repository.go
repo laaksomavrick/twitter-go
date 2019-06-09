@@ -1,53 +1,38 @@
 package internal
 
 import (
-	"net/http"
-	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/cassandra"
 )
 
-type UsersRepository struct {
+type Repository struct {
 	cassandra *cassandra.Client
 }
 
-func NewUsersRepository(cassandra *cassandra.Client) *UsersRepository {
-	return &UsersRepository{
+func NewRepository(cassandra *cassandra.Client) *Repository {
+	return &Repository{
 		cassandra: cassandra,
 	}
 }
 
-func (ur *UsersRepository) Insert(u User) *amqp.ErrorResponse {
-	// TODO-2: add insert method to cassandra wrapper?
-	exists := 0
-
-	err := ur.cassandra.Session.Query("SELECT count(*) FROM users WHERE username = ?", u.Username).Scan(&exists)
+func (r *Repository) Insert(u User) error {
+	err := r.cassandra.Session.Query("INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, u.RefreshToken).Exec()
 	if err != nil {
-		return &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
-	}
-
-	if exists == 1 {
-		return &amqp.ErrorResponse{Message: "User already exists", Status: http.StatusConflict}
-	}
-
-	err = ur.cassandra.Session.Query("INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, u.RefreshToken).Exec()
-	if err != nil {
-		return &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+		return err
 	}
 
 	return nil
 }
 
-func (ur *UsersRepository) FindByUsername(username string) (User, *amqp.ErrorResponse) {
+func (r *Repository) FindByUsername(username string) (User, error) {
 
 	var user User
 	var password string
 	var refreshToken string
 	var email string
 
-	err := ur.cassandra.Session.Query("SELECT password, email, refresh_token FROM users WHERE username = ?", username).Scan(&password, &email, &refreshToken)
+	err := r.cassandra.Session.Query("SELECT password, email, refresh_token FROM users WHERE username = ?", username).Scan(&password, &email, &refreshToken)
 	if err != nil {
-		// TODO-10
-		return user, &amqp.ErrorResponse{Message: "Not found", Status: http.StatusNotFound}
+		return user, err
 	}
 
 	user.Username = username
@@ -56,4 +41,20 @@ func (ur *UsersRepository) FindByUsername(username string) (User, *amqp.ErrorRes
 	user.RefreshToken = refreshToken
 
 	return user, nil
+}
+
+// Exists checks whether the given user exists in the users table
+func (r *Repository) Exists(username string) (bool, error) {
+	count := 0
+
+	err := r.cassandra.Session.Query("SELECT count(*) FROM users WHERE username = ?", username).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	if count == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }

@@ -17,13 +17,24 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 		}
 
+		repo := NewRepository(s.Cassandra)
+
+		exists, err := repo.Exists(user.Username)
+
+		if err != nil {
+			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+		}
+
+		if exists == true {
+			return nil, &amqp.ErrorResponse{Message: "User already exists", Status: http.StatusConflict}
+		}
+
 		if err := user.prepareForInsert(); err != nil {
 			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 		}
 
-		repo := NewUsersRepository(s.Cassandra)
 		if err := repo.Insert(user); err != nil {
-			return nil, err
+			return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 		}
 
 		accessToken, err := auth.GenerateToken(user.Username, s.Config.HMACSecret)
@@ -54,10 +65,10 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 		}
 
 		// find user from given username
-		repo := NewUsersRepository(s.Cassandra)
-		userRecord, amqpErr := repo.FindByUsername(authorizeDto.Username)
-		if amqpErr != nil {
-			return nil, amqpErr
+		repo := NewRepository(s.Cassandra)
+		userRecord, err := repo.FindByUsername(authorizeDto.Username)
+		if err != nil {
+			return nil, &amqp.ErrorResponse{Message: "Not found", Status: http.StatusNotFound}
 		}
 
 		// compare password against hash
@@ -82,3 +93,15 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 
 	}
 }
+
+// exists handler
+
+// exists, err := repo.Exists(req.Username)
+
+// if err != nil {
+// 	return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
+// }
+
+// if exists == false {
+// 	return nil, &amqp.ErrorResponse{Message: "User not found", Status: http.StatusNotFound}
+// }

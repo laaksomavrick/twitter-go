@@ -7,9 +7,7 @@ import (
 	"twitter-go/services/common/config"
 )
 
-// TODO: func * Service func([]byte) (AmqpReply, AmqpError)
-
-type ReplyFunc func(s *Service) func([]byte) interface{}
+type ReplyFunc func(s *Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse)
 
 type Repliers []Replier
 

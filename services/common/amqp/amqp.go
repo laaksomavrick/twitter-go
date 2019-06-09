@@ -22,8 +22,13 @@ type Client struct {
 	replyToDelivery <-chan amqp.Delivery
 }
 
-// RPCError represents the shape of an error from an rpc request
-type RPCError struct {
+// OkResponse represents the expected type for an amqp reply
+type OkResponse struct {
+	Body []byte
+}
+
+// ErrorResponse represents the shape of an amqp response error
+type ErrorResponse struct {
 	Message string
 	Status  int
 }
@@ -66,7 +71,7 @@ func NewClient(url string, port string) (*Client, error) {
 
 // DirectRequest send a direct reply message to the given routingKey,
 // receiving and returning a response
-func (client *Client) DirectRequest(routingKey string, routingKeyValues []string, payload interface{}) (res []byte, rpcError *RPCError) {
+func (client *Client) DirectRequest(routingKey string, routingKeyValues []string, payload interface{}) (*OkResponse, *ErrorResponse) {
 	bytes, err := json.Marshal(payload)
 	interpolatedRoutingKey := interpolateRoutingKey(routingKey, routingKeyValues)
 
@@ -77,7 +82,7 @@ func (client *Client) DirectRequest(routingKey string, routingKeyValues []string
 				"payload": payload,
 			},
 		})
-		return res, &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		return nil, &ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	corrID := uuid.New().String()
@@ -102,27 +107,28 @@ func (client *Client) DirectRequest(routingKey string, routingKeyValues []string
 				"body":       payload,
 			},
 		})
-		return res, &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		return nil, &ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	for d := range client.replyToDelivery {
 		if corrID == d.CorrelationId {
-			var replyError RPCError
-			_ = json.Unmarshal(d.Body, &replyError)
+			var errorResponse ErrorResponse
+			_ = json.Unmarshal(d.Body, &errorResponse)
 			// if replyToDelivery is a valid error message
-			if replyError.Status != 0 {
-				return res, &replyError
+			if errorResponse.Status != 0 {
+				return nil, &errorResponse
 			}
-			return d.Body, nil
+			okResponse := &OkResponse{Body: d.Body}
+			return okResponse, nil
 		}
 	}
 
-	return res, nil
+	return nil, nil
 }
 
 // DirectReply applies a given function as a callback on a given routingKey for processing,
 // directly replying with the result
-func (client *Client) DirectReply(routingKey string, callback func([]byte) interface{}) {
+func (client *Client) DirectReply(routingKey string, callback func([]byte) (*OkResponse, *ErrorResponse)) {
 	client.declareExchange(routingKey)
 
 	q, err := client.declareQueue(routingKey)
@@ -174,18 +180,32 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 
 	go func() {
 		for d := range msgs {
-			payload := callback(d.Body)
+			okResponse, errorResponse := callback(d.Body)
 
-			bytes, err := json.Marshal(payload)
+			var bytes []byte
+
+			if okResponse != nil {
+				bytes = okResponse.Body
+			} else if errorResponse != nil {
+				bytes, err = json.Marshal(errorResponse)
+			} else {
+				logger.Error(logger.Loggable{
+					Message: "An error occurred retrieving a response from an amqp replyFunc",
+					Data: map[string]interface{}{
+						"okResponse":    okResponse,
+						"errorResponse": errorResponse,
+					},
+				})
+			}
 
 			if err != nil {
 				logger.Error(logger.Loggable{
 					Message: "An error occurred parsing the payload to a byte array",
 					Data: map[string]interface{}{
-						"payload": payload,
+						"okResponse":    okResponse,
+						"errorResponse": errorResponse,
 					},
 				})
-				return
 			}
 
 			err = client.channel.Publish(
@@ -203,9 +223,10 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 				logger.Error(logger.Loggable{
 					Message: "An error occurred publishing a message",
 					Data: map[string]interface{}{
-						"routingKey": routingKey,
-						"queueName":  q.Name,
-						"payload":    payload,
+						"routingKey":    routingKey,
+						"queueName":     q.Name,
+						"okResponse":    okResponse,
+						"errorResponse": errorResponse,
 					},
 				})
 				return
@@ -217,7 +238,7 @@ func (client *Client) DirectReply(routingKey string, callback func([]byte) inter
 }
 
 // PublishToTopic publishes a message to the given routing key on a topic exchange
-func (client *Client) PublishToTopic(routingKey string, keyValues []string, payload interface{}) *RPCError {
+func (client *Client) PublishToTopic(routingKey string, keyValues []string, payload interface{}) *ErrorResponse {
 	bytes, err := json.Marshal(payload)
 	interpolatedRoutingKey := interpolateRoutingKey(routingKey, keyValues)
 
@@ -228,7 +249,7 @@ func (client *Client) PublishToTopic(routingKey string, keyValues []string, payl
 				"payload": payload,
 			},
 		})
-		return &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		return &ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	client.declareExchange(routingKey)
@@ -251,7 +272,7 @@ func (client *Client) PublishToTopic(routingKey string, keyValues []string, payl
 				"body":       payload,
 			},
 		})
-		return &RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		return &ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	return nil

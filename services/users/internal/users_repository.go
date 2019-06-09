@@ -16,28 +16,28 @@ func NewUsersRepository(cassandra *cassandra.Client) *UsersRepository {
 	}
 }
 
-func (ur *UsersRepository) Insert(u User) *amqp.RPCError {
+func (ur *UsersRepository) Insert(u User) *amqp.ErrorResponse {
 	// TODO-2: add insert method to cassandra wrapper?
 	exists := 0
 
 	err := ur.cassandra.Session.Query("SELECT count(*) FROM users WHERE username = ?", u.Username).Scan(&exists)
 	if err != nil {
-		return &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		return &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	if exists == 1 {
-		return &amqp.RPCError{Message: "User already exists", Status: http.StatusConflict}
+		return &amqp.ErrorResponse{Message: "User already exists", Status: http.StatusConflict}
 	}
 
 	err = ur.cassandra.Session.Query("INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, u.RefreshToken).Exec()
 	if err != nil {
-		return &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		return &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	return nil
 }
 
-func (ur *UsersRepository) FindByUsername(username string) (User, *amqp.RPCError) {
+func (ur *UsersRepository) FindByUsername(username string) (User, *amqp.ErrorResponse) {
 
 	var user User
 	var password string
@@ -47,7 +47,7 @@ func (ur *UsersRepository) FindByUsername(username string) (User, *amqp.RPCError
 	err := ur.cassandra.Session.Query("SELECT password, email, refresh_token FROM users WHERE username = ?", username).Scan(&password, &email, &refreshToken)
 	if err != nil {
 		// TODO-10
-		return user, &amqp.RPCError{Message: "Not found", Status: http.StatusNotFound}
+		return user, &amqp.ErrorResponse{Message: "Not found", Status: http.StatusNotFound}
 	}
 
 	user.Username = username

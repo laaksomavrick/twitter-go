@@ -34,15 +34,15 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		res, rpcErr := s.Amqp.DirectRequest(amqp.CreateTweetKey, []string{createTweetDto.Username}, createTweetDto)
+		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.CreateTweetKey, []string{createTweetDto.Username}, createTweetDto)
 
-		if rpcErr != nil {
-			core.EncodeJSONError(w, errors.New(rpcErr.Message), rpcErr.Status)
+		if errorResponse != nil {
+			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
 			return
 		}
 
 		tweet := make(map[string]interface{})
-		if err := json.Unmarshal(res, &tweet); err != nil {
+		if err := json.Unmarshal(okResponse.Body, &tweet); err != nil {
 			core.EncodeJSONError(w, errors.New(core.InternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -65,16 +65,16 @@ func GetAllUserTweets(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		res, rpcErr := s.Amqp.DirectRequest(amqp.GetAllUserTweetsKey, []string{getAllUserTweetsDto.Username}, getAllUserTweetsDto)
+		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.GetAllUserTweetsKey, []string{getAllUserTweetsDto.Username}, getAllUserTweetsDto)
 
-		if rpcErr != nil {
-			core.EncodeJSONError(w, errors.New(rpcErr.Message), rpcErr.Status)
+		if errorResponse != nil {
+			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
 			return
 		}
 
 		tweets := make([]map[string]interface{}, 0)
 
-		if err := json.Unmarshal(res, &tweets); err != nil {
+		if err := json.Unmarshal(okResponse.Body, &tweets); err != nil {
 			core.EncodeJSONError(w, errors.New(core.InternalServerError), http.StatusInternalServerError)
 			return
 		}

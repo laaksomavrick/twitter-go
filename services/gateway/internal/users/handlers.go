@@ -25,15 +25,16 @@ func CreateHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		res, err := s.Amqp.DirectRequest(amqp.CreateUserKey, []string{}, createUserDto)
+		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.CreateUserKey, []string{}, createUserDto)
 
-		if err != nil {
-			core.EncodeJSONError(w, errors.New(err.Message), err.Status)
+		if errorResponse != nil {
+			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
 			return
 		}
 
 		user := make(map[string]interface{})
-		if err := json.Unmarshal(res, &user); err != nil {
+
+		if err := json.Unmarshal(okResponse.Body, &user); err != nil {
 			handleError(
 				w,
 				err,
@@ -64,15 +65,15 @@ func AuthorizeHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		res, err := s.Amqp.DirectRequest(amqp.AuthorizeUserKey, []string{authenticateUserDto.Username}, authenticateUserDto)
+		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.AuthorizeUserKey, []string{authenticateUserDto.Username}, authenticateUserDto)
 
-		if err != nil {
-			core.EncodeJSONError(w, errors.New(err.Message), err.Status)
+		if errorResponse != nil {
+			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
 			return
 		}
 
 		authorization := make(map[string]interface{})
-		if err := json.Unmarshal(res, &authorization); err != nil {
+		if err := json.Unmarshal(okResponse.Body, &authorization); err != nil {
 			handleError(
 				w,
 				err,

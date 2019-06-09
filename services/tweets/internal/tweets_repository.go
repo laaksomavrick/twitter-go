@@ -21,23 +21,25 @@ func NewRepository(cassandra *cassandra.Client) *Repository {
 	}
 }
 
+// TODO: extract some calls to seperate functions so handler can decide how to handle errs; these fns can return regular ers as a consequence and aren't coupled to handler
+
 // Insert creates tweet records to all relevant tables
-func (tr *Repository) Insert(t Tweet) *amqp.RPCError {
+func (tr *Repository) Insert(t Tweet) *amqp.ErrorResponse {
 	err := tr.cassandra.Session.Query("INSERT INTO tweets (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content).Exec()
 	if err != nil {
-		return &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		return &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	err = tr.cassandra.Session.Query("INSERT INTO tweets_by_user (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content).Exec()
 	if err != nil {
-		return &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		return &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	return nil
 }
 
 // GetAll returns all tweets for the given username
-func (tr *Repository) GetAll(username string) (tweets []Tweet, rpcErr *amqp.RPCError) {
+func (tr *Repository) GetAll(username string) (tweets []Tweet, errorResponse *amqp.ErrorResponse) {
 	var id gocql.UUID
 	var content string
 	var createdAt time.Time
@@ -46,11 +48,11 @@ func (tr *Repository) GetAll(username string) (tweets []Tweet, rpcErr *amqp.RPCE
 	// Check if user exists
 	err := tr.cassandra.Session.Query("SELECT count(*) FROM users WHERE username = ?", username).Scan(&exists)
 	if err != nil {
-		return nil, &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	if exists == 0 {
-		return nil, &amqp.RPCError{Message: "User not found", Status: http.StatusNotFound}
+		return nil, &amqp.ErrorResponse{Message: "User not found", Status: http.StatusNotFound}
 	}
 
 	// Get tweets
@@ -66,7 +68,7 @@ func (tr *Repository) GetAll(username string) (tweets []Tweet, rpcErr *amqp.RPCE
 		tweets = append(tweets, tweet)
 	}
 	if err := iter.Close(); err != nil {
-		return nil, &amqp.RPCError{Message: err.Error(), Status: http.StatusInternalServerError}
+		return nil, &amqp.ErrorResponse{Message: err.Error(), Status: http.StatusInternalServerError}
 	}
 
 	// if none found, make it an empty array

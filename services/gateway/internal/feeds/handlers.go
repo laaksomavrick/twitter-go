@@ -8,7 +8,10 @@ import (
 
 func GetMyFeed(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		foo := map[string]string{"hello": "world"}
-		json.NewEncoder(w).Encode(foo)
+		jwtUsername := core.GetUsernameFromRequest(r)
+
+		getFeedDto := &GetFeedDto{Username: jwtUsername}
+
+		json.NewEncoder(w).Encode(getFeedDto)
 	}
 }

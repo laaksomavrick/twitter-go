@@ -34,3 +34,8 @@ The API gateway is the entry point to the backend. It defines the api surface fo
     - TODO
 - `GET /following/count`
     - TODO
+
+##### Feeds
+
+- `GET /feeds/me`
+    - Retrieve a user's feed, which is a collection of tweets from those they've subscribed to

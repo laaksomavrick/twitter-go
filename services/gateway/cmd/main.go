@@ -4,6 +4,7 @@ import (
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/logger"
 	"twitter-go/services/gateway/internal/core"
+	"twitter-go/services/gateway/internal/feeds"
 	"twitter-go/services/gateway/internal/followers"
 	"twitter-go/services/gateway/internal/tweets"
 	"twitter-go/services/gateway/internal/users"
@@ -32,6 +33,7 @@ func main() {
 		users.Routes,
 		tweets.Routes,
 		followers.Routes,
+		feeds.Routes,
 	}
 	var appRoutes []core.Route
 	for _, r := range routes {

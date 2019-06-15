@@ -1,11 +1,6 @@
-## Feeds service
+DROP TABLE IF EXISTS twtr.feed_items;
 
-TODO
-
-#### What is a feed in the data model?
-
-```
-twtr.feed_items (
+CREATE TABLE twtr.feed_items (
   username text,
   tweet_id uuid,
   tweet_username text,
@@ -13,8 +8,3 @@ twtr.feed_items (
   tweet_created_at timestamp,
   PRIMARY KEY (username, tweet_created_at)
 );
-```
-
-#### Access patterns
-
-TODO

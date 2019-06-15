@@ -7,6 +7,7 @@ const (
 	CreateTweetKey      = "twtr.*.tweets.create"
 	CreatedTweetKey     = "twtr.*.tweets.created"
 	GetAllUserTweetsKey = "twtr.*.tweets.get-all"
+	FollowUserKey       = "twtr.*.follow.create"
 )
 
 // InterpolateRoutingKey replaces all asterisks present in the function argument key

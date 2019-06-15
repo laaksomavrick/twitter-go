@@ -21,3 +21,16 @@ The API gateway is the entry point to the backend. It defines the api surface fo
     - Get tweets posted by the logged in user
 - `GET /tweets/$username`
     - Get tweets posted by the specified $username
+
+##### Followers
+
+- `POST /follow`
+    - Follow a user
+- `GET /followers`
+    - TODO
+- `GET /followers/count`
+    - TODO
+- `GET /following`
+    - TODO
+- `GET /following/count`
+    - TODO

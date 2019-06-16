@@ -26,7 +26,7 @@ func main() {
 		panic(err)
 	}
 
-	service := service.NewService("Users", amqp, cassandra, config)
+	svc := service.NewService("Users", amqp, cassandra, config)
 
-	service.Init(internal.Repliers)
+	svc.Init(internal.Repliers, service.Consumers{})
 }

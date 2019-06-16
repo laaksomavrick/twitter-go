@@ -27,7 +27,7 @@ func main() {
 		panic(err)
 	}
 
-	service := service.NewService("Feeds", amqp, cassandra, config)
+	svc := service.NewService("Feeds", amqp, cassandra, config)
 
-	service.Init(internal.Repliers)
+	svc.Init(internal.Repliers, service.Consumers{})
 }

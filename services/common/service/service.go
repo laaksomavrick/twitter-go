@@ -16,6 +16,15 @@ type Replier struct {
 	Handler    ReplyFunc
 }
 
+type ConsumeFunc func(s *Service) func([]byte)
+
+type Consumers []Consumer
+
+type Consumer struct {
+	RoutingKey string
+	Handler    ConsumeFunc
+}
+
 type Service struct {
 	Name      string
 	Config    *config.ServiceConfig
@@ -32,8 +41,8 @@ func NewService(name string, amqp *amqp.Client, cassandra *cassandra.Client, con
 	}
 }
 
-func (s *Service) Init(repliers Repliers) {
-	s.Wire(repliers)
+func (s *Service) Init(repliers Repliers, consumers Consumers) {
+	s.Wire(repliers, consumers)
 	s.Serve()
 }
 
@@ -47,8 +56,12 @@ func (s *Service) Serve() {
 	<-forever
 }
 
-func (s *Service) Wire(repliers Repliers) {
+func (s *Service) Wire(repliers Repliers, consumers Consumers) {
 	for _, replier := range repliers {
 		s.Amqp.DirectReply(replier.RoutingKey, replier.Handler(s))
+	}
+
+	for _, consumer := range consumers {
+		s.Amqp.ConsumeFromTopic(consumer.RoutingKey, consumer.Handler(s))
 	}
 }

@@ -6,8 +6,9 @@ const (
 	ExistsUserKey       = "twtr.*.exists"
 	CreateTweetKey      = "twtr.*.tweets.create"
 	CreatedTweetKey     = "twtr.*.tweets.created"
-	GetAllUserTweetsKey = "twtr.*.tweets.get-all"
+	GetAllUserTweetsKey = "twtr.*.tweets.get"
 	FollowUserKey       = "twtr.*.follow.create"
+	GetAllUserFollowers = "twtr.*.followers.get"
 	GetMyFeedKey        = "twtr.*.feed.me"
 )
 

@@ -18,3 +18,20 @@ type FeedItem struct {
 	Content   string     `json:"content"`
 	CreatedAt time.Time  `json:"createdAt"`
 }
+
+type AddTweetToFeed struct {
+	TweetUsername  string     `json:"username"`
+	TweetContent   string     `json:"content"`
+	TweetID        gocql.UUID `json:"id"`
+	TweetCreatedAt time.Time  `json:"createdAt"`
+}
+
+type GetUserFollowers struct {
+	Username string `json:"username"`
+}
+
+type Follower struct {
+	Username string `json:"username"`
+}
+
+type Followers []Follower

@@ -55,3 +55,19 @@ func (r *Repository) GetFeed(feedUsername string) (feed Feed, err error) {
 
 	return feed, nil
 }
+
+func (r *Repository) WriteToFeed(followerUsername string, item FeedItem) error {
+	err := r.cassandra.Session.Query(`
+		INSERT INTO feed_items
+			(username, tweet_created_at, tweet_content, tweet_id, tweet_username)
+		VALUES
+			(?, ?, ?, ?, ?)
+	`,
+		followerUsername, item.CreatedAt, item.Content, item.ID.String(), item.Username,
+	).Exec()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

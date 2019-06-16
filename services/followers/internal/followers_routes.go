@@ -11,4 +11,8 @@ var Repliers = service.Repliers{
 		RoutingKey: amqp.FollowUserKey,
 		Handler:    FollowUserHandler,
 	},
+	service.Replier{
+		RoutingKey: amqp.GetAllUserFollowers,
+		Handler:    GetUserFollowersHandler,
+	},
 }

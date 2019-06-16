@@ -29,5 +29,5 @@ func main() {
 
 	svc := service.NewService("Feeds", amqp, cassandra, config)
 
-	svc.Init(internal.Repliers, service.Consumers{})
+	svc.Init(internal.Repliers, internal.Consumers)
 }

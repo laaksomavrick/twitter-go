@@ -12,3 +12,10 @@ var Repliers = service.Repliers{
 		Handler:    GetMyFeedHandler,
 	},
 }
+
+var Consumers = service.Consumers{
+	service.Consumer{
+		RoutingKey: amqp.CreatedTweetKey,
+		Handler:    AddTweetToFeedHandler,
+	},
+}

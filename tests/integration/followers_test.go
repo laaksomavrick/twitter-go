@@ -33,7 +33,7 @@ func (suite *FollowersTestSuite) SetupSuite() {
 	})
 
 	if statusCode != 200 {
-		suite.Fail("Unable to create a user for tweets_test")
+		suite.Fail("Unable to create a user for followers_test")
 	}
 
 	suite.UserA = userA
@@ -54,7 +54,7 @@ func (suite *FollowersTestSuite) SetupSuite() {
 	suite.UserB = userB
 }
 
-func (suite *FollowersTestSuite) TestCreateTweetSuccess() {
+func (suite *FollowersTestSuite) TestFollowerUserSuccess() {
 	accessToken := suite.UserA["accessToken"].(string)
 	followingUsername := suite.UserB["username"].(string)
 	statusCode, createTweetResponse := suite.followViaHTTP(map[string]string{

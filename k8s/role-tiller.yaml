@@ -1,0 +1,10 @@
+# Defines a role allowing tiller to manage all resources in the twtr-dev namespace
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tiller-manager
+  namespace: twtr-dev
+rules:
+- apiGroups: ["", "batch", "extensions", "apps"]
+  resources: ["*"]
+  verbs: ["*"]

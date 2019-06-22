@@ -1,4 +1,4 @@
-.PHONY: migrate up build format run
+.PHONY: migrate up build format run test setup-k8s
 
 migrate:
 	@scripts/migrate.sh
@@ -21,3 +21,7 @@ format:
 
 test:
 	@scripts/run-integration-tests.sh
+
+setup-k8s:
+	@scripts/setup-k8s.sh
+

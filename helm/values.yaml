@@ -1,0 +1,4 @@
+# Define global configuration values here
+
+ingress:
+  enabled: false

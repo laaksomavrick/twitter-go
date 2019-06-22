@@ -1,0 +1,4 @@
+apiVersion: v1
+description: twitter-go's helm chart
+name: twtr
+version: 0.1.0

@@ -1,4 +1,4 @@
-.PHONY: migrate up build format run test setup-k8s
+.PHONY: migrate up build format run test setup-k8s helm-install helm-debug
 
 migrate:
 	@scripts/migrate.sh
@@ -25,3 +25,8 @@ test:
 setup-k8s:
 	@scripts/setup-k8s.sh
 
+helm-install:
+	@helm install ./helm --tiller-namespace=twtr-dev --namespace=twtr-dev
+
+helm-debug:
+	@helm install --dry-run --debug ./helm --tiller-namespace=twtr-dev --namespace=twtr-dev

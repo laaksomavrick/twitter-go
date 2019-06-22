@@ -1,10 +1,10 @@
-.PHONY: migrate up build format run test setup-k8s helm-install helm-debug
+.PHONY: migrate up build format run test setup-k8s helm-install helm-debug helm-purge
 
 migrate:
 	@scripts/migrate.sh
 
 up:
-	@docker-compose -f build/docker-compose.yml up
+	@docker-compose -f docker-compose.yml up
 
 run:
 	@scripts/run-all.sh
@@ -26,7 +26,10 @@ setup-k8s:
 	@scripts/setup-k8s.sh
 
 helm-install:
-	@helm install ./helm --tiller-namespace=twtr-dev --namespace=twtr-dev
+	@helm install ./helm --name=twtr-dev --tiller-namespace=twtr-dev --namespace=twtr-dev
 
 helm-debug:
-	@helm install --dry-run --debug ./helm --tiller-namespace=twtr-dev --namespace=twtr-dev
+	@helm install --dry-run --debug ./helm --name=twtr-dev --tiller-namespace=twtr-dev --namespace=twtr-dev
+
+helm-purge:
+	@helm ls --all --short --tiller-namespace=twtr-dev | xargs -L1 helm delete --purge --tiller-namespace=twtr-dev

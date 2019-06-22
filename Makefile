@@ -10,9 +10,11 @@ run:
 	@scripts/run-all.sh
 
 build:
+	@go build -ldflags="-s -w" -o bin/gateway services/feeds/cmd/main.go
+	@go build -ldflags="-s -w" -o bin/gateway services/followers/cmd/main.go
 	@go build -ldflags="-s -w" -o bin/gateway services/gateway/cmd/main.go
-	@go build -ldflags="-s -w" -o bin/gateway services/users/cmd/main.go
 	@go build -ldflags="-s -w" -o bin/gateway services/tweets/cmd/main.go
+	@go build -ldflags="-s -w" -o bin/gateway services/users/cmd/main.go
 
 format:
 	@scripts/gofmt.sh

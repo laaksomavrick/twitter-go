@@ -1,6 +1,10 @@
 # twitter-go
 
-Twitter-go is an application api intended to back a minimal feature set of twitter. Its development serves as a fun learning exercise to explore an event driven microservice architecture, using Go. I've been curious about Go for a variety of reasons (performance, native type system, binaries, pragmatic ecosystem) and want to explore it and its ecosystem. Moreover, microservice backends are becoming more ubiquitous due to the organizational benefits they offer (independent deployability, independent scalability, fault tolerance), and an event driven architecture is a common way of developing loosely coupled services.
+Twitter-go is an application api intended to back a minimal feature set of twitter. Its development serves as a fun learning exercise to explore an event driven microservice architecture, using Go. I've been curious about Go for a variety of reasons (performance, native type system, binaries, pragmatic ecosystem) and want to explore it and its ecosystem.
+
+Moreover, microservice backends are becoming more ubiquitous due to the organizational benefits they offer (independent deployability, independent scalability, fault tolerance), and an event driven architecture is a common way of developing loosely coupled services.
+
+Further, writing the infrastructure for managing and deploying a microservice backend likely will and has proven to be a fantastic learning exercise for crystalizing knowledge I've acquired about Kubernetes, Docker and Helm.
 
 #### What is the app?
 
@@ -34,9 +38,8 @@ Twitter-go is an application api intended to back a minimal feature set of twitt
 
 #### Technical choices:
 
-- Go for all service level code
-- RabbitMQ for the message bus
-- Cassandra for a nosql datastore
-- Docker and Kubernetes for deployment
-- Some bash scripts for god knows what
-- More things as they come up
+- Go for gateway and application code
+- RabbitMQ for a message bus (rpc, pub/sub)
+- Cassandra for a NoSQL datastore
+- Docker, Kubernetes and Helm for deployment
+- Some bash scripts for convenience, glueing things

@@ -1,4 +1,4 @@
-.PHONY: migrate up build format run test setup-k8s helm-install helm-debug helm-purge helm-upgrade
+.PHONY: migrate up build format run test setup-k8s helm-install helm-debug helm-purge helm-upgrade docker-build
 
 migrate:
 	@scripts/migrate.sh
@@ -36,3 +36,6 @@ helm-debug:
 
 helm-purge:
 	@helm ls --all --short --tiller-namespace=twtr-dev | xargs -L1 helm delete --purge --tiller-namespace=twtr-dev
+
+docker-build:
+	@scripts/build-docker-images.sh

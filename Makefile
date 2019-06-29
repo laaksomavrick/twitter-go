@@ -37,5 +37,5 @@ helm-debug:
 helm-purge:
 	@helm ls --all --short --tiller-namespace=twtr-dev | xargs -L1 helm delete --purge --tiller-namespace=twtr-dev
 
-docker-build:
-	@scripts/build-docker-images.sh
+docker-build-push:
+	@scripts/build-and-push-docker-images.sh

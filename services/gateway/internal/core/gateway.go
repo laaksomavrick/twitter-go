@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -58,4 +59,13 @@ func (s *Gateway) Wire(routes Routes) {
 
 		handlers.CORS(originsOk, headersOk, methodsOk)(s.Router)
 	}
+
+	// TODO: temporary health check to validate helm deployment
+	var healthz http.HandlerFunc
+	healthz = func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"hello": "world",
+		})
+	}
+	s.Router.Methods("GET").Path("/healthz").Handler(healthz)
 }

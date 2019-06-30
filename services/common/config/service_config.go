@@ -23,11 +23,7 @@ func NewServiceConfig() *ServiceConfig {
 	}
 
 	if os.Getenv("AMQP_URL") == "" {
-		os.Setenv("AMQP_URL", "amqp://rabbitmq:rabbitmq@localhost")
-	}
-
-	if os.Getenv("AMQP_PORT") == "" {
-		os.Setenv("AMQP_PORT", "5672")
+		os.Setenv("AMQP_URL", "amqp://rabbitmq:rabbitmq@localhost:5672")
 	}
 
 	if os.Getenv("LOG_LEVEL") == "" {

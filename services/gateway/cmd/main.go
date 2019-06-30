@@ -19,7 +19,7 @@ func main() {
 
 	router := core.NewRouter()
 
-	amqp, err := amqp.NewClient(config.AmqpURL, config.AmqpPort)
+	amqp, err := amqp.NewClient(config.AmqpURL)
 	if err != nil {
 		panic(err)
 	}

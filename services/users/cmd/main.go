@@ -14,7 +14,7 @@ func main() {
 
 	config := config.NewServiceConfig()
 
-	amqp, err := amqp.NewClient(config.AmqpURL, config.AmqpPort)
+	amqp, err := amqp.NewClient(config.AmqpURL)
 
 	if err != nil {
 		panic(err)

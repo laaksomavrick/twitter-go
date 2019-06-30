@@ -42,11 +42,17 @@ func HandleInternalServiceError(err error, data map[string]interface{}) (*OkResp
 }
 
 // NewClient constructs a new instance of a client
-func NewClient(url string, port string) (*Client, error) {
-	dial := fmt.Sprintf("%s:%s", url, port)
+func NewClient(url string) (*Client, error) {
+	dial := fmt.Sprintf("%s", url)
 	conn, err := amqp.Dial(dial)
 
 	if err != nil {
+		logger.Error(logger.Loggable{
+			Message: err.Error(),
+			Data: map[string]interface{}{
+				"url": url,
+			},
+		})
 		return nil, errors.New("Failed to connect to RabbitMQ")
 	}
 

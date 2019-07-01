@@ -22,15 +22,11 @@ spec:
   {{- end }}
 {{- end }}
   rules:
-  {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: twtr-dev.com # In /etc/hosts, this maps to my cluster's ip
       http:
         paths:
-        {{- range .paths }}
-          - path: {{ . }}
-            backend:
-              serviceName: {{ $fullName }}
-              servicePort: http
-        {{- end }}
-  {{- end }}
+        - path: /
+          backend:
+            serviceName: {{ .Release.Name }}-gateway
+            servicePort: 3000
 {{- end }}

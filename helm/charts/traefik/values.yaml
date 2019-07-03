@@ -28,7 +28,7 @@ podDisruptionBudget: {}
 resources: {}
 
 debug:
-  enabled: false
+  enabled: true # Here for dev
 
 # logLevel: error
 
@@ -305,8 +305,8 @@ acme:
     ##
     # existingClaim:
 dashboard:
-  enabled: false
-  domain: traefik.example.com
+  enabled: true
+  domain: traefik.dashboard.com
   # serviceType: ClusterIP
   service: {}
     # annotations:

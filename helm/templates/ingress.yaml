@@ -28,5 +28,12 @@ spec:
         - path: /
           backend:
             serviceName: {{ .Release.Name }}-gateway
-            servicePort: 3000
+            servicePort: http
+    - host: traefik.dashboard.com
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: {{ .Release.Name }}-traefik-dashboard
+            servicePort: 80
 {{- end }}

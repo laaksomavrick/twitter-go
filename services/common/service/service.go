@@ -5,6 +5,7 @@ import (
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/cassandra"
 	"twitter-go/services/common/config"
+	"twitter-go/services/common/healthz"
 )
 
 type ReplyFunc func(s *Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse)
@@ -64,4 +65,6 @@ func (s *Service) Wire(repliers Repliers, consumers Consumers) {
 	for _, consumer := range consumers {
 		s.Amqp.ConsumeFromTopic(consumer.RoutingKey, consumer.Handler(s))
 	}
+
+	healthz.SetupHealthCheck(*s.Config)
 }

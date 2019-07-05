@@ -14,9 +14,12 @@ ABS_PATH=$(cd "$(dirname "$1")"; pwd -P)$(basename "$1") || exit
 
 echo 'Booting go services...'
 
+HTTP_PORT=3000
 for i in $(find ${ABS_PATH}/services/**/cmd/*.go); do 
-    echo "Booting $i";
-    go run $i &
+    echo "Booting $i"
+    # Don't want to run everything on the same port for local dev (addr already in use)
+    PORT=${HTTP_PORT} go run $i &
+    let HTTP_PORT=${HTTP_PORT}+1
 done;
 
 cat

@@ -24,11 +24,7 @@ func NewConfig() *GatewayConfig {
 	}
 
 	if os.Getenv("AMQP_URL") == "" {
-		os.Setenv("AMQP_URL", "amqp://rabbitmq:rabbitmq@localhost")
-	}
-
-	if os.Getenv("AMQP_PORT") == "" {
-		os.Setenv("AMQP_PORT", "5672")
+		os.Setenv("AMQP_URL", "amqp://rabbitmq:rabbitmq@localhost:5672")
 	}
 
 	if os.Getenv("LOG_LEVEL") == "" {
@@ -51,7 +47,6 @@ func NewConfig() *GatewayConfig {
 			Env:      os.Getenv("GO_ENV"),
 			Port:     os.Getenv("PORT"),
 			AmqpURL:  os.Getenv("AMQP_URL"),
-			AmqpPort: os.Getenv("AMQP_PORT"),
 			LogLevel: os.Getenv("LOG_LEVEL"),
 		},
 		HmacSecret: []byte(os.Getenv("HMAC_SECRET")),

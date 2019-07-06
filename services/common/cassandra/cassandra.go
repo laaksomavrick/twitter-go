@@ -24,5 +24,4 @@ func NewClient(host string, keyspace string) (*Client, error) {
 		cluster: cluster,
 		Session: session,
 	}, nil
-
 }

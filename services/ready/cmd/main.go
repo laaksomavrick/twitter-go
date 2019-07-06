@@ -32,8 +32,8 @@ func main() {
 	log.Printf("AMQP_URL: %s", amqpURL)
 	log.Printf("CASSANDRA_URL: %s", cassandraURL)
 
-	// Give ourselves a minute (10 * 6s) - should we make this configurable?
-	for i := 0; i < 10; i++ {
+	// Give ourselves 200 seconds (20 * 10s) - should we make this configurable?
+	for i := 0; i < 20; i++ {
 		if amqpConn == nil {
 			log.Print("Attempting to dial rabbit")
 			amqpConn, _ = amqp.Dial(amqpURL)
@@ -56,8 +56,8 @@ func main() {
 		}
 
 		log.Printf("Sleeping...")
-
-		time.Sleep(6 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
+	log.Fatal("Failed to establish both connections, exiting")
 }

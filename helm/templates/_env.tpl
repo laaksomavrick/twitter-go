@@ -10,4 +10,6 @@
   value: {{ .Release.Name }}-cassandra
 - name: CASSANDRA_KEYSPACE
   value: {{ .Values.cassandraKeyspace | default "twtr" | quote }}
+- name: PORT
+  value: {{ .Values.service.port | default "3000" | quote }}
 {{- end -}}

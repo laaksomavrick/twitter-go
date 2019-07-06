@@ -50,3 +50,27 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
   env:
 {{ include "twtr.env" . | indent 2}}
 {{- end -}}
+
+{{- define "twtr.containers" -}}
+- name: {{ .Chart.Name }}
+  image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+  imagePullPolicy: {{ .Values.image.pullPolicy }}
+  ports:
+  - name: http
+    containerPort: 3000
+    protocol: TCP
+  livenessProbe:
+  initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+  periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+  failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+  httpGet:
+    path: {{ .Values.livenessProbe.httpGet.path }}
+    port: {{ .Values.livenessProbe.httpGet.port }}
+  readinessProbe:
+  initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+  periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+  failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+  httpGet:
+    path: {{ .Values.readinessProbe.httpGet.path }}
+    port: {{ .Values.readinessProbe.httpGet.port }}
+{{- end -}}

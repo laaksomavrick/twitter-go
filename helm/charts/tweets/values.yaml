@@ -1,0 +1,32 @@
+# Default values for gateway.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: gcr.io/precise-clock-244301/twtr-tweets
+  tag: latest
+  # Convenience for development; don't want to set up CI/CD for the moment
+  # pullPolicy: IfNotPresent
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: "3000"
+
+livenessProbe:
+  initialDelaySeconds: 45
+  periodSeconds: 10
+  failureThreshold: 6
+  httpGet:
+    path: /healthz
+    port: 3000
+
+readinessProbe:
+  initialDelaySeconds: 45
+  periodSeconds: 10
+  failureThreshold: 6
+  httpGet:
+    path: /healthz
+    port: 3000

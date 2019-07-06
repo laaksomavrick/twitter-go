@@ -26,6 +26,7 @@ livenessProbe:
 readinessProbe:
   initialDelaySeconds: 45
   periodSeconds: 10
+  failureThreshold: 6
   httpGet:
     path: /healthz
     port: 3000

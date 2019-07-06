@@ -43,3 +43,10 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
+
+{{- define "initContainers.ready" -}}
+- name: init-ready
+  image: gcr.io/precise-clock-244301/twtr-ready
+  env:
+{{ include "twtr.env" . | indent 2}}
+{{- end -}}

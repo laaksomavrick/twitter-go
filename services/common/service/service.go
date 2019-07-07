@@ -44,17 +44,6 @@ func NewService(name string, amqp *amqp.Client, cassandra *cassandra.Client, con
 
 func (s *Service) Init(repliers Repliers, consumers Consumers) {
 	s.Wire(repliers, consumers)
-	s.Serve()
-}
-
-func (s *Service) Serve() {
-	// TODO: serve metrics
-	if s.Config.Env != "testing" {
-		log.Printf("%s listening", s.Name)
-	}
-
-	forever := make(chan bool)
-	<-forever
 }
 
 func (s *Service) Wire(repliers Repliers, consumers Consumers) {
@@ -64,6 +53,10 @@ func (s *Service) Wire(repliers Repliers, consumers Consumers) {
 
 	for _, consumer := range consumers {
 		s.Amqp.ConsumeFromTopic(consumer.RoutingKey, consumer.Handler(s))
+	}
+
+	if s.Config.Env != "testing" {
+		log.Printf("%s listening", s.Name)
 	}
 
 	healthz.SetupHealthCheck(*s.Config)

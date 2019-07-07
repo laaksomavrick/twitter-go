@@ -1,55 +1,14 @@
 package core
 
-import (
-	"encoding/json"
-	"net/http"
-	"net/url"
-)
-
 const (
+	// UnprocessableEntity maps to the default string for a 412 response
 	UnprocessableEntity = "Unprocessable request sent."
-	BadRequest          = "Bad request sent."
-	Forbidden           = "Forbidden."
+	// BadRequest maps to the default string for a 400 response
+	BadRequest = "Bad request sent."
+	// Forbidden maps to the default string for a 403 response
+	Forbidden = "Forbidden."
+	// InternalServerError maps to the default string for a 500 response
 	InternalServerError = "Something went wrong."
-	NotFound            = "Resource not found."
+	// NotFound maps to the default string for a 401 response
+	NotFound = "Resource not found."
 )
-
-// ErrorResponse defines the shape of the default error response served by the application
-type ErrorResponse struct {
-	Status int    `json:"status"`
-	Error  string `json:"error"`
-}
-
-// ErrorsResponse defines the shape of the default error response served by the application
-type ErrorsResponse struct {
-	Status int                    `json:"status"`
-	Errors map[string]interface{} `json:"errors"`
-}
-
-// TODO-8: unify err and errs response
-// Error -> Message ?
-
-// EncodeJSONError issues an ErrorResponse payload to the client
-func EncodeJSONError(w http.ResponseWriter, err error, status int) {
-	errResp := &ErrorResponse{
-		Status: status,
-		Error:  err.Error(), //TODO-10: error should be derivative from status, not user provided ***
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(errResp)
-}
-
-// EncodeJSONErrors issues an ErrorsResponse payload to the client
-func EncodeJSONErrors(w http.ResponseWriter, errs url.Values, status int) {
-	errsMap := map[string]interface{}{
-		"errors": errs,
-	}
-	errResp := &ErrorsResponse{
-		Status: status,
-		Errors: errsMap,
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(errResp)
-}

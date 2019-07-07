@@ -2,7 +2,6 @@ package tweets
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/gateway/internal/core"
@@ -11,48 +10,49 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// CreateHandler handles creating a new tweet
-func CreateHandler(s *core.Gateway) http.HandlerFunc {
+// CreateTweetHandler provides a HandlerFunc for creating a tweet
+func CreateTweetHandler(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		createTweetDto := &CreateTweetDto{}
 		jwtUsername := core.GetUsernameFromRequest(r)
 
 		defer r.Body.Close()
 		if err := json.NewDecoder(r.Body).Decode(createTweetDto); err != nil {
-			core.EncodeJSONError(w, errors.New(core.BadRequest), http.StatusBadRequest)
+			core.Error(w, http.StatusBadRequest, core.BadRequest)
 			return
 		}
 
 		if jwtUsername == "" {
-			core.EncodeJSONError(w, errors.New(core.Forbidden), http.StatusForbidden)
+			core.Error(w, http.StatusForbidden, core.Forbidden)
 			return
 		}
 
 		createTweetDto.Username = jwtUsername
 
-		if errs := createTweetDto.Validate(); len(errs) > 0 {
-			core.EncodeJSONErrors(w, errs, http.StatusBadRequest)
+		if err := createTweetDto.Validate(); err != nil {
+			core.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.CreateTweetKey, []string{createTweetDto.Username}, createTweetDto)
 
 		if errorResponse != nil {
-			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
+			core.Error(w, errorResponse.Status, errorResponse.Message)
 			return
 		}
 
 		tweet := make(map[string]interface{})
 		if err := json.Unmarshal(okResponse.Body, &tweet); err != nil {
-			core.EncodeJSONError(w, errors.New(core.InternalServerError), http.StatusInternalServerError)
+			core.Error(w, http.StatusInternalServerError, core.InternalServerError)
 			return
 		}
 
-		json.NewEncoder(w).Encode(tweet)
+		core.Ok(w, tweet)
 	}
 }
 
-func GetAllUserTweets(s *core.Gateway) http.HandlerFunc {
+// GetAllUserTweetsHandler provides a HandlerFunc for retrieving all tweets made by a user
+func GetAllUserTweetsHandler(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		username := vars["username"]
@@ -65,8 +65,8 @@ func GetAllUserTweets(s *core.Gateway) http.HandlerFunc {
 			Username: username,
 		}
 
-		if errs := getAllUserTweetsDto.Validate(); len(errs) > 0 {
-			core.EncodeJSONErrors(w, errs, http.StatusBadRequest)
+		if err := getAllUserTweetsDto.Validate(); err != nil {
+			core.Error(w, http.StatusBadRequest, core.BadRequest)
 			return
 		}
 
@@ -74,7 +74,7 @@ func GetAllUserTweets(s *core.Gateway) http.HandlerFunc {
 		_, errorResponse := s.Amqp.DirectRequest(amqp.ExistsUserKey, []string{getAllUserTweetsDto.Username}, existsUserDto)
 
 		if errorResponse != nil {
-			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
+			core.Error(w, errorResponse.Status, errorResponse.Message)
 			return
 		}
 
@@ -82,17 +82,17 @@ func GetAllUserTweets(s *core.Gateway) http.HandlerFunc {
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.GetAllUserTweetsKey, []string{getAllUserTweetsDto.Username}, getAllUserTweetsDto)
 
 		if errorResponse != nil {
-			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
+			core.Error(w, errorResponse.Status, errorResponse.Message)
 			return
 		}
 
 		tweets := make([]map[string]interface{}, 0)
 
 		if err := json.Unmarshal(okResponse.Body, &tweets); err != nil {
-			core.EncodeJSONError(w, errors.New(core.InternalServerError), http.StatusInternalServerError)
+			core.Error(w, http.StatusInternalServerError, core.InternalServerError)
 			return
 		}
 
-		json.NewEncoder(w).Encode(tweets)
+		core.Ok(w, tweets)
 	}
 }

@@ -2,99 +2,74 @@ package users
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"twitter-go/services/common/amqp"
-	"twitter-go/services/common/logger"
 	"twitter-go/services/gateway/internal/core"
 )
 
-// CreateHandler handles creating a new user.
-func CreateHandler(s *core.Gateway) http.HandlerFunc {
+// CreateUserHandler provides a HandlerFunc for creating a new user.
+func CreateUserHandler(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		createUserDto := &CreateUserDto{}
 
 		defer r.Body.Close()
 		if err := json.NewDecoder(r.Body).Decode(createUserDto); err != nil {
-			core.EncodeJSONError(w, errors.New(core.UnprocessableEntity), http.StatusBadRequest)
+			core.Error(w, http.StatusBadRequest, core.BadRequest)
 			return
 		}
 
-		if errs := createUserDto.Validate(); len(errs) > 0 {
-			core.EncodeJSONErrors(w, errs, http.StatusBadRequest)
+		if err := createUserDto.Validate(); err != nil {
+			core.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.CreateUserKey, []string{}, createUserDto)
 
 		if errorResponse != nil {
-			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
+			core.Error(w, errorResponse.Status, errorResponse.Message)
 			return
 		}
 
 		user := make(map[string]interface{})
 
 		if err := json.Unmarshal(okResponse.Body, &user); err != nil {
-			handleError(
-				w,
-				err,
-				"Users.CreateHandler",
-				"An error occurred processing an rpc response",
-				http.StatusInternalServerError,
-			)
+			core.Error(w, http.StatusUnprocessableEntity, core.UnprocessableEntity)
 			return
 		}
 
-		json.NewEncoder(w).Encode(user)
+		core.Ok(w, user)
 	}
 }
 
-// AuthorizeHandler handles the username and password authorization flow
+// AuthorizeHandler provides a HandlerFunc for the app authorization flow
 func AuthorizeHandler(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authenticateUserDto := &AuthenticateUserDto{}
 
 		defer r.Body.Close()
 		if err := json.NewDecoder(r.Body).Decode(authenticateUserDto); err != nil {
-			core.EncodeJSONError(w, errors.New(core.UnprocessableEntity), http.StatusBadRequest)
+			core.Error(w, http.StatusBadRequest, core.BadRequest)
 			return
 		}
 
-		if errs := authenticateUserDto.Validate(); len(errs) > 0 {
-			core.EncodeJSONErrors(w, errs, http.StatusBadRequest)
+		if err := authenticateUserDto.Validate(); err != nil {
+			core.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.AuthorizeUserKey, []string{authenticateUserDto.Username}, authenticateUserDto)
 
 		if errorResponse != nil {
-			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
+			core.Error(w, errorResponse.Status, errorResponse.Message)
 			return
 		}
 
 		authorization := make(map[string]interface{})
 		if err := json.Unmarshal(okResponse.Body, &authorization); err != nil {
-			handleError(
-				w,
-				err,
-				"Users.AuthorizeHandler",
-				"An error occurred processing an rpc response",
-				http.StatusInternalServerError,
-			)
+			core.Error(w, http.StatusUnprocessableEntity, core.UnprocessableEntity)
 			return
 		}
 
-		json.NewEncoder(w).Encode(authorization)
-
+		core.Ok(w, authorization)
 	}
-}
-
-func handleError(w http.ResponseWriter, err error, caller string, msg string, status int) {
-	logger.Error(logger.Loggable{
-		Message: msg,
-		Data: map[string]interface{}{
-			"error": err.Error(),
-		},
-	})
-	core.EncodeJSONError(w, err, status)
 }

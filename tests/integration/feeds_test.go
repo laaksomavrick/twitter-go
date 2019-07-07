@@ -18,7 +18,7 @@ type FeedsTestSuite struct {
 func (suite *FeedsTestSuite) SetupSuite() {
 	// TODO-13: have this be set by an ENV when k8s is up; test against k8s
 	// Will need to create a new keyspace + tables for above use case to not blow up prod?
-	suite.Init("localhost", "3000")
+	suite.Init("localhost", "3002")
 	suite.Truncate([]string{"users", "feed_items"})
 
 	// Create a new user
@@ -34,7 +34,7 @@ func (suite *FeedsTestSuite) SetupSuite() {
 		suite.Fail("Unable to create a user for feeds_test")
 	}
 
-	suite.UserA = userA
+	suite.UserA = userA["data"].(map[string]interface{})
 }
 
 func (suite *FeedsTestSuite) TestGetFeedSuccess() {

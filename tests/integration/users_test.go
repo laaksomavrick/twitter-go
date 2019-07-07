@@ -18,7 +18,7 @@ type UsersTestSuite struct {
 func (suite *UsersTestSuite) SetupSuite() {
 	// TODO-13: have this be set by an ENV when k8s is up; test against k8s
 	// Will need to create a new keyspace + tables for above use case to not blow up prod?
-	suite.Init("localhost", "3000")
+	suite.Init("localhost", "3002")
 	suite.Truncate([]string{"users"})
 }
 
@@ -32,13 +32,13 @@ func (suite *UsersTestSuite) TestCreateUserSuccess() {
 	})
 
 	assert.Equal(suite.T(), 200, statusCode)
-	assert.NotNil(suite.T(), createUserResponse["accessToken"])
-	assert.NotNil(suite.T(), createUserResponse["refreshToken"])
+	assert.NotNil(suite.T(), createUserResponse["data"].(map[string]interface{})["accessToken"])
+	assert.NotNil(suite.T(), createUserResponse["data"].(map[string]interface{})["refreshToken"])
 }
 
 func (suite *UsersTestSuite) TestCreateUserBadRequestFailure() {
 	statusCode, _ := suite.CreateUserViaHTTP(map[string]string{})
-	assert.Equal(suite.T(), 400, statusCode)
+	assert.Equal(suite.T(), 422, statusCode)
 }
 
 func (suite *UsersTestSuite) TestCreateUserAlreadyExistsFailure() {
@@ -74,15 +74,15 @@ func (suite *UsersTestSuite) TestAuthenticateUserSuccess() {
 	})
 
 	assert.Equal(suite.T(), 200, statusCode)
-	assert.NotNil(suite.T(), authenticateUserResponse["accessToken"])
-	assert.NotNil(suite.T(), authenticateUserResponse["refreshToken"])
+	assert.NotNil(suite.T(), authenticateUserResponse["data"].(map[string]interface{})["accessToken"])
+	assert.NotNil(suite.T(), authenticateUserResponse["data"].(map[string]interface{})["refreshToken"])
 }
 
 func (suite *UsersTestSuite) TestAuthenticateUserBadInputFailure() {
 
 	statusCode, _ := suite.authenticateUserViaHTTP(map[string]string{})
 
-	assert.Equal(suite.T(), 400, statusCode)
+	assert.Equal(suite.T(), 422, statusCode)
 }
 
 func (suite *UsersTestSuite) TestAuthenticateUserBadPasswordFailure() {

@@ -41,12 +41,12 @@ func CheckAuthentication(authRequired bool, hmacSecret []byte) Middleware {
 			// get token
 			bearerTokenString := r.Header.Get("Authorization")
 			if bearerTokenString == "" {
-				EncodeJSONError(w, errors.New("Invalid Authorization Header"), http.StatusUnauthorized)
+				Error(w, http.StatusUnauthorized, Forbidden)
 				return
 			}
 			split := strings.Split(bearerTokenString, "Bearer ")
 			if len(split) < 2 {
-				EncodeJSONError(w, errors.New("Invalid Authorization Header"), http.StatusUnauthorized)
+				Error(w, http.StatusUnauthorized, Forbidden)
 				return
 			}
 			token := split[1]
@@ -54,7 +54,7 @@ func CheckAuthentication(authRequired bool, hmacSecret []byte) Middleware {
 			// parse token
 			username, err := parseToken(token, hmacSecret)
 			if err != nil {
-				EncodeJSONError(w, err, http.StatusInternalServerError)
+				Error(w, http.StatusInternalServerError, InternalServerError)
 				return
 			}
 

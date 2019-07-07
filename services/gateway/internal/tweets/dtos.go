@@ -1,36 +1,34 @@
 package tweets
 
-import "net/url"
+import (
+	"errors"
+)
 
 type CreateTweetDto struct {
 	Username string
 	Content  string `json:"content"`
 }
 
-func (dto *CreateTweetDto) Validate() url.Values {
-	errs := url.Values{}
-
+func (dto *CreateTweetDto) Validate() error {
 	if dto.Username == "" {
-		errs.Add("username", "Username is a required field")
+		return errors.New("username is a required field")
 	}
 
 	if dto.Content == "" {
-		errs.Add("content", "Content is a required field")
+		return errors.New("content is a required field")
 	}
 
-	return errs
+	return nil
 }
 
 type GetAllUserTweetsDto struct {
 	Username string `json:"username"`
 }
 
-func (dto *GetAllUserTweetsDto) Validate() url.Values {
-	errs := url.Values{}
-
+func (dto *GetAllUserTweetsDto) Validate() error {
 	if dto.Username == "" {
-		errs.Add("username", "Username is a required field")
+		return errors.New("username is a required field")
 	}
 
-	return errs
+	return nil
 }

@@ -1,26 +1,25 @@
 package followers
 
-import "net/url"
+import "errors"
 
 type FollowUserDto struct {
 	Username          string `json:"username"`
 	FollowingUsername string `json:"followingUsername"`
 }
 
-func (dto *FollowUserDto) Validate() url.Values {
-	errs := url.Values{}
+func (dto *FollowUserDto) Validate() error {
 
 	if dto.Username == "" {
-		errs.Add("username", "Username is a required field")
+		return errors.New("username is a required field")
 	}
 
 	if dto.FollowingUsername == "" {
-		errs.Add("followingUsername", "FollowingUsername is a required field")
+		return errors.New("followingUsername is a required field")
 	}
 
 	if dto.Username == dto.FollowingUsername {
-		errs.Add("followingUsername", "FollowingUsername cannot be the same as username")
+		return errors.New("followingUsername cannot be the same as username")
 	}
 
-	return errs
+	return nil
 }

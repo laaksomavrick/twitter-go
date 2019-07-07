@@ -9,13 +9,13 @@ var Routes = core.Routes{
 		Method:       "POST",
 		Pattern:      "/tweets",
 		AuthRequired: true,
-		HandlerFunc:  CreateHandler,
+		HandlerFunc:  CreateTweetHandler,
 	},
 	core.Route{
 		Name:         "GetAllUserTweets",
 		Method:       "GET",
 		Pattern:      "/tweets/{username}",
 		AuthRequired: false,
-		HandlerFunc:  GetAllUserTweets,
+		HandlerFunc:  GetAllUserTweetsHandler,
 	},
 }

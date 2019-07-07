@@ -9,6 +9,6 @@ var Routes = core.Routes{
 		Method:       "GET",
 		Pattern:      "/feeds/me",
 		AuthRequired: true,
-		HandlerFunc:  GetMyFeed,
+		HandlerFunc:  GetMyFeedHandler,
 	},
 }

@@ -21,7 +21,7 @@ type TweetsTestSuite struct {
 func (suite *TweetsTestSuite) SetupSuite() {
 	// TODO-13: have this be set by an ENV when k8s is up; test against k8s
 	// Will need to create a new keyspace + tables for above use case to not blow up prod?
-	suite.Init("localhost", "3000")
+	suite.Init("localhost", "3002")
 	suite.Truncate([]string{"users", "tweets", "tweets_by_user"})
 
 	// Create a new user
@@ -37,7 +37,7 @@ func (suite *TweetsTestSuite) SetupSuite() {
 		suite.Fail("Unable to create a user for tweets_test")
 	}
 
-	suite.UserA = userA
+	suite.UserA = userA["data"].(map[string]interface{})
 
 	// Create another new user
 	statusCode, userB := suite.CreateUserViaHTTP(map[string]string{
@@ -52,7 +52,7 @@ func (suite *TweetsTestSuite) SetupSuite() {
 		suite.Fail("Unable to create a user for tweets_test")
 	}
 
-	suite.UserB = userB
+	suite.UserB = userB["data"].(map[string]interface{})
 }
 
 func (suite *TweetsTestSuite) TestCreateTweetSuccess() {
@@ -62,8 +62,8 @@ func (suite *TweetsTestSuite) TestCreateTweetSuccess() {
 	}, accessToken)
 
 	assert.Equal(suite.T(), 200, statusCode)
-	assert.NotNil(suite.T(), createTweetResponse["content"])
-	assert.NotNil(suite.T(), createTweetResponse["id"])
+	assert.NotNil(suite.T(), createTweetResponse["data"].(map[string]interface{})["content"])
+	assert.NotNil(suite.T(), createTweetResponse["data"].(map[string]interface{})["id"])
 }
 
 func (suite *TweetsTestSuite) TestCreateTweetNotAuthorized() {
@@ -81,7 +81,7 @@ func (suite *TweetsTestSuite) TestCreateTweetInvalid() {
 		"content": "",
 	}, accessToken)
 
-	assert.Equal(suite.T(), 400, statusCode)
+	assert.Equal(suite.T(), 422, statusCode)
 }
 
 func (suite *TweetsTestSuite) TestGetTweetsSuccess() {
@@ -122,7 +122,7 @@ func (suite *TweetsTestSuite) createTweetViaHTTP(request map[string]string, acce
 	return resp.StatusCode, createTweetResponse
 }
 
-func (suite *TweetsTestSuite) getTweetsViaHTTP(username string) (statusCode int, getTweetsResponse []interface{}) {
+func (suite *TweetsTestSuite) getTweetsViaHTTP(username string) (statusCode int, getTweetsResponse map[string]interface{}) {
 	url := fmt.Sprintf("/tweets/%s", username)
 	resp, err := http.Get(suite.GetBaseURLWithSuffix(url))
 	if err != nil {

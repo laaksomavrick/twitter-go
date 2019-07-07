@@ -20,7 +20,7 @@ type FollowersTestSuite struct {
 func (suite *FollowersTestSuite) SetupSuite() {
 	// TODO-13: have this be set by an ENV when k8s is up; test against k8s
 	// Will need to create a new keyspace + tables for above use case to not blow up prod?
-	suite.Init("localhost", "3000")
+	suite.Init("localhost", "3002")
 	suite.Truncate([]string{"users", "user_followers", "user_followings"})
 
 	// Create a new user
@@ -36,7 +36,7 @@ func (suite *FollowersTestSuite) SetupSuite() {
 		suite.Fail("Unable to create a user for followers_test")
 	}
 
-	suite.UserA = userA
+	suite.UserA = userA["data"].(map[string]interface{})
 
 	// Create another new user
 	statusCode, userB := suite.CreateUserViaHTTP(map[string]string{
@@ -51,7 +51,7 @@ func (suite *FollowersTestSuite) SetupSuite() {
 		suite.Fail("Unable to create a user for tweets_test")
 	}
 
-	suite.UserB = userB
+	suite.UserB = userB["data"].(map[string]interface{})
 }
 
 func (suite *FollowersTestSuite) TestFollowerUserSuccess() {
@@ -62,8 +62,8 @@ func (suite *FollowersTestSuite) TestFollowerUserSuccess() {
 	}, accessToken)
 
 	assert.Equal(suite.T(), 200, statusCode)
-	assert.NotNil(suite.T(), createTweetResponse["followingUsername"])
-	assert.NotNil(suite.T(), createTweetResponse["username"])
+	assert.NotNil(suite.T(), createTweetResponse["data"].(map[string]interface{})["followingUsername"])
+	assert.NotNil(suite.T(), createTweetResponse["data"].(map[string]interface{})["username"])
 }
 
 func (suite *FollowersTestSuite) TestFollowNotAuthorized() {

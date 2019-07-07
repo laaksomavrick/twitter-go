@@ -9,7 +9,7 @@ var Routes = core.Routes{
 		Method:       "POST",
 		Pattern:      "/users",
 		AuthRequired: false,
-		HandlerFunc:  CreateHandler,
+		HandlerFunc:  CreateUserHandler,
 	},
 	core.Route{
 		Name:         "AuthenticateUser",

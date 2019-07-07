@@ -2,13 +2,13 @@ package followers
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/gateway/internal/core"
 	"twitter-go/services/gateway/internal/users"
 )
 
+// FollowUserHandler provides a HandlerFunc for following a user
 func FollowUserHandler(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jwtUsername := core.GetUsernameFromRequest(r)
@@ -16,14 +16,14 @@ func FollowUserHandler(s *core.Gateway) http.HandlerFunc {
 
 		defer r.Body.Close()
 		if err := json.NewDecoder(r.Body).Decode(followUserDto); err != nil {
-			core.EncodeJSONError(w, errors.New(core.UnprocessableEntity), http.StatusBadRequest)
+			core.Error(w, http.StatusBadRequest, core.BadRequest)
 			return
 		}
 
 		followUserDto.Username = jwtUsername
 
-		if errs := followUserDto.Validate(); len(errs) > 0 {
-			core.EncodeJSONErrors(w, errs, http.StatusUnprocessableEntity)
+		if err := followUserDto.Validate(); err != nil {
+			core.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
@@ -35,7 +35,7 @@ func FollowUserHandler(s *core.Gateway) http.HandlerFunc {
 		_, errorResponse := s.Amqp.DirectRequest(amqp.ExistsUserKey, []string{followUserDto.Username}, existsUserDto)
 
 		if errorResponse != nil {
-			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
+			core.Error(w, errorResponse.Status, errorResponse.Message)
 			return
 		}
 
@@ -43,17 +43,17 @@ func FollowUserHandler(s *core.Gateway) http.HandlerFunc {
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.FollowUserKey, []string{jwtUsername}, followUserDto)
 
 		if errorResponse != nil {
-			core.EncodeJSONError(w, errors.New(errorResponse.Message), errorResponse.Status)
+			core.Error(w, errorResponse.Status, errorResponse.Message)
 			return
 		}
 
 		relationship := make(map[string]interface{})
 
 		if err := json.Unmarshal(okResponse.Body, &relationship); err != nil {
-			core.EncodeJSONError(w, errors.New(core.UnprocessableEntity), http.StatusInternalServerError)
+			core.Error(w, http.StatusUnprocessableEntity, core.UnprocessableEntity)
 			return
 		}
 
-		json.NewEncoder(w).Encode(relationship)
+		core.Ok(w, relationship)
 	}
 }

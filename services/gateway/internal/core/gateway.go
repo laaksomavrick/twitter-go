@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/healthz"
+	"twitter-go/services/common/metrics"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -29,12 +30,11 @@ func NewGateway(router *mux.Router, amqp *amqp.Client, config *GatewayConfig) *G
 
 // Init applies the middleware stack, registers route handlers, and serves the application
 func (s *Gateway) Init(routes Routes) {
-	s.Wire(routes)
-	s.Serve()
+	s.wire(routes)
+	s.serve()
 }
 
-// Serve serves the application :)
-func (s *Gateway) Serve() {
+func (s *Gateway) serve() {
 	port := fmt.Sprintf(":%s", s.GatewayConfig.Port)
 	if s.GatewayConfig.Env != "testing" {
 		fmt.Printf("Gateway listening on port: %s\n", port)
@@ -42,8 +42,7 @@ func (s *Gateway) Serve() {
 	log.Fatal(http.ListenAndServe(port, s.Router))
 }
 
-// Wire applies global middlewares to all routes and registers the routes and their configuration to the Gateway.Router
-func (s *Gateway) Wire(routes Routes) {
+func (s *Gateway) wire(routes Routes) {
 	for _, route := range routes {
 		handler := Chain(route.HandlerFunc(s), CheckAuthentication(route.AuthRequired, s.GatewayConfig.HmacSecret), LogRequest(route.Name))
 
@@ -61,5 +60,5 @@ func (s *Gateway) Wire(routes Routes) {
 	}
 
 	healthz.WireToRouter(s.Router)
-
+	metrics.WireToRouter(s.Router)
 }

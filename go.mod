@@ -10,6 +10,7 @@ require (
 	github.com/gorilla/mux v1.7.1
 	github.com/laaksomavrick/goals-api v0.0.0-20181206032021-ded7f87c6c00
 	github.com/lib/pq v1.1.1 // indirect
+	github.com/prometheus/client_golang v1.0.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
 	github.com/stretchr/testify v1.3.0

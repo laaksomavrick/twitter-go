@@ -3,6 +3,7 @@ package internal
 import (
 	"time"
 	"twitter-go/services/common/cassandra"
+	"twitter-go/services/common/logger"
 
 	"github.com/gocql/gocql"
 )
@@ -21,12 +22,22 @@ func NewRepository(cassandra *cassandra.Client) *Repository {
 
 // Insert creates tweet records to all relevant tables
 func (r *Repository) Insert(t Tweet) error {
-	err := r.cassandra.Session.Query("INSERT INTO tweets (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content).Exec()
+	query := r.cassandra.Session.Query("INSERT INTO tweets (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	err := query.Exec()
+
 	if err != nil {
 		return err
 	}
 
-	err = r.cassandra.Session.Query("INSERT INTO tweets_by_user (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content).Exec()
+	query = r.cassandra.Session.Query("INSERT INTO tweets_by_user (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	err = query.Exec()
+
 	if err != nil {
 		return err
 	}
@@ -40,7 +51,11 @@ func (r *Repository) GetAll(username string) (tweets []Tweet, err error) {
 	var content string
 	var createdAt time.Time
 
-	iter := r.cassandra.Session.Query("SELECT id, username, content, created_at FROM tweets_by_user WHERE username = ?", username).Iter()
+	query := r.cassandra.Session.Query("SELECT id, username, content, created_at FROM tweets_by_user WHERE username = ?", username)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	iter := query.Iter()
 
 	for iter.Scan(&id, &username, &content, &createdAt) {
 		tweet := Tweet{
@@ -51,6 +66,7 @@ func (r *Repository) GetAll(username string) (tweets []Tweet, err error) {
 		}
 		tweets = append(tweets, tweet)
 	}
+
 	if err := iter.Close(); err != nil {
 		return nil, err
 	}

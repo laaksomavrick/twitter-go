@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/auth"
+	"twitter-go/services/common/logger"
 	"twitter-go/services/common/service"
 )
 
@@ -14,7 +15,7 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		var user User
 
 		if err := json.Unmarshal(msg, &user); err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"user": user})
+			return amqp.HandleInternalServiceError(err, nil)
 		}
 
 		repo := NewRepository(s.Cassandra)
@@ -22,7 +23,7 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		exists, err := repo.Exists(user.Username)
 
 		if err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"user": user})
+			return amqp.HandleInternalServiceError(err, user)
 		}
 
 		if exists == true {
@@ -30,20 +31,23 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		}
 
 		if err := user.prepareForInsert(); err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"user": user})
+			return amqp.HandleInternalServiceError(err, user)
 		}
 
 		if err := repo.Insert(user); err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"user": user})
+			return amqp.HandleInternalServiceError(err, user)
 		}
 
 		accessToken, err := auth.GenerateToken(user.Username, s.Config.HMACSecret)
 		if err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"user": user})
+			return amqp.HandleInternalServiceError(err, user)
 		}
 
 		user.AccessToken = accessToken
 		user.sanitize()
+
+		// Don't want to log user password ;)
+		logger.Info(logger.Loggable{Message: "Create user ok", Data: user})
 
 		body, _ := json.Marshal(user)
 
@@ -58,8 +62,15 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 		var authorizeDto AuthorizeDto
 
 		if err := json.Unmarshal(msg, &authorizeDto); err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"authorizeDto": authorizeDto})
+			return amqp.HandleInternalServiceError(err, nil)
 		}
+
+		logger.Info(
+			logger.Loggable{
+				Message: "Authorizing user",
+				Data:    map[string]interface{}{"username": authorizeDto.Username},
+			},
+		)
 
 		// find user from given username
 		repo := NewRepository(s.Cassandra)
@@ -76,7 +87,7 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 		// return new accessToken and refreshToken from record
 		accessToken, err := auth.GenerateToken(authorizeDto.Username, s.Config.HMACSecret)
 		if err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"authorizeDto": authorizeDto})
+			return amqp.HandleInternalServiceError(err, authorizeDto)
 		}
 
 		authorized := AuthorizeResponse{
@@ -85,6 +96,13 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 		}
 
 		body, _ := json.Marshal(authorized)
+
+		logger.Info(
+			logger.Loggable{
+				Message: "Authorize user ok",
+				Data:    map[string]interface{}{"username": authorizeDto.Username},
+			},
+		)
 
 		return &amqp.OkResponse{Body: body}, nil
 	}
@@ -96,15 +114,17 @@ func ExistsHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		var existsDto ExistsDto
 
 		if err := json.Unmarshal(msg, &existsDto); err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"existsDto": existsDto})
+			return amqp.HandleInternalServiceError(err, nil)
 		}
+
+		logger.Info(logger.Loggable{Message: "Checking that user exists", Data: existsDto})
 
 		repo := NewRepository(s.Cassandra)
 
 		exists, err := repo.Exists(existsDto.Username)
 
 		if err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"username": existsDto.Username})
+			return amqp.HandleInternalServiceError(err, existsDto)
 		}
 
 		if exists == false {
@@ -116,6 +136,8 @@ func ExistsHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		}
 
 		body, _ := json.Marshal(existsResponse)
+
+		logger.Info(logger.Loggable{Message: "User exists ok", Data: existsResponse})
 
 		return &amqp.OkResponse{Body: body}, nil
 	}

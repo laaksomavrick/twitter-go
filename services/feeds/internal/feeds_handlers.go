@@ -12,19 +12,23 @@ func GetMyFeedHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 		var getMyFeed GetMyFeed
 
 		if err := json.Unmarshal(msg, &getMyFeed); err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"getMyFeed": getMyFeed})
+			return amqp.HandleInternalServiceError(err, nil)
 		}
+
+		logger.Info(logger.Loggable{Message: "Retrieving user feed", Data: getMyFeed})
 
 		repo := NewRepository(s.Cassandra)
 		feed, err := repo.GetFeed(getMyFeed.Username)
 		if err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"getMyFeed": getMyFeed})
+			return amqp.HandleInternalServiceError(err, getMyFeed)
 		}
 
 		body, err := json.Marshal(feed)
 		if err != nil {
-			return amqp.HandleInternalServiceError(err, map[string]interface{}{"feed": feed})
+			return amqp.HandleInternalServiceError(err, feed)
 		}
+
+		logger.Info(logger.Loggable{Message: "Retrieving user feed ok", Data: feed})
 
 		return &amqp.OkResponse{Body: body}, nil
 	}
@@ -41,6 +45,8 @@ func AddTweetToFeedHandler(s *service.Service) func([]byte) {
 			return
 		}
 
+		logger.Info(logger.Loggable{Message: "Adding tweet to feeds", Data: addTweetToFeed})
+
 		// find all users subscribed to tweetUsername
 		getUserFollowers := GetUserFollowers{Username: addTweetToFeed.TweetUsername}
 
@@ -49,7 +55,7 @@ func AddTweetToFeedHandler(s *service.Service) func([]byte) {
 		if errorResponse != nil {
 			logger.Error(logger.Loggable{
 				Message: errorResponse.Message,
-				Data:    map[string]interface{}{"getUserFollowers": getUserFollowers},
+				Data:    getUserFollowers,
 			})
 			return
 		}
@@ -62,6 +68,8 @@ func AddTweetToFeedHandler(s *service.Service) func([]byte) {
 			})
 			return
 		}
+
+		logger.Info(logger.Loggable{Message: "Received getAllUserFollowers response", Data: followers})
 
 		// for each user, upsert the tweet to their feed
 		repo := NewRepository(s.Cassandra)
@@ -77,9 +85,11 @@ func AddTweetToFeedHandler(s *service.Service) func([]byte) {
 			if err != nil {
 				logger.Error(logger.Loggable{
 					Message: err.Error(),
-					Data:    map[string]interface{}{"feedItem": feedItem},
+					Data:    feedItem,
 				})
 			}
 		}
+
+		logger.Info(logger.Loggable{Message: "Adding tweet to feeds ok", Data: nil})
 	}
 }

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"twitter-go/services/common/cassandra"
+	"twitter-go/services/common/logger"
 )
 
 type Repository struct {
@@ -15,18 +16,28 @@ func NewRepository(cassandra *cassandra.Client) *Repository {
 }
 
 func (r *Repository) FollowUser(username string, followingUsername string) error {
-	err := r.cassandra.Session.Query(
+	query := r.cassandra.Session.Query(
 		"INSERT INTO user_followings (username, following_username) VALUES (?, ?)",
 		username, followingUsername,
-	).Exec()
+	)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	err := query.Exec()
+
 	if err != nil {
 		return err
 	}
 
-	err = r.cassandra.Session.Query(
+	query = r.cassandra.Session.Query(
 		"INSERT INTO user_followers (username, follower_username) VALUES (?, ?)",
 		followingUsername, username,
-	).Exec()
+	)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	err = query.Exec()
+
 	if err != nil {
 		return err
 	}
@@ -37,7 +48,7 @@ func (r *Repository) FollowUser(username string, followingUsername string) error
 func (r *Repository) GetUserFollowers(followedUsername string) (followers Followers, err error) {
 	var username string
 
-	iter := r.cassandra.Session.Query(`
+	query := r.cassandra.Session.Query(`
 		SELECT
 			follower_username
 		FROM
@@ -46,7 +57,11 @@ func (r *Repository) GetUserFollowers(followedUsername string) (followers Follow
 			username = ?
 	`,
 		followedUsername,
-	).Iter()
+	)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	iter := query.Iter()
 
 	for iter.Scan(&username) {
 		follower := Follower{
@@ -54,6 +69,7 @@ func (r *Repository) GetUserFollowers(followedUsername string) (followers Follow
 		}
 		followers = append(followers, follower)
 	}
+
 	if err := iter.Close(); err != nil {
 		return nil, err
 	}

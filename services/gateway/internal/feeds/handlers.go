@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"twitter-go/services/common/amqp"
+	"twitter-go/services/common/logger"
 	"twitter-go/services/gateway/internal/core"
 )
 
@@ -13,6 +14,8 @@ func GetMyFeedHandler(s *core.Gateway) http.HandlerFunc {
 		jwtUsername := core.GetUsernameFromRequest(r)
 
 		getFeedDto := &GetFeedDto{Username: jwtUsername}
+
+		logger.Info(logger.Loggable{Message: "Getting user feed", Data: *getFeedDto})
 
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.GetMyFeedKey, []string{getFeedDto.Username}, getFeedDto)
 

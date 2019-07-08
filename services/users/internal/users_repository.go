@@ -2,6 +2,7 @@ package internal
 
 import (
 	"twitter-go/services/common/cassandra"
+	"twitter-go/services/common/logger"
 )
 
 type Repository struct {
@@ -15,7 +16,12 @@ func NewRepository(cassandra *cassandra.Client) *Repository {
 }
 
 func (r *Repository) Insert(u User) error {
-	err := r.cassandra.Session.Query("INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, u.RefreshToken).Exec()
+	query := r.cassandra.Session.Query("INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, u.RefreshToken)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	err := query.Exec()
+
 	if err != nil {
 		return err
 	}
@@ -24,13 +30,17 @@ func (r *Repository) Insert(u User) error {
 }
 
 func (r *Repository) FindByUsername(username string) (User, error) {
-
 	var user User
 	var password string
 	var refreshToken string
 	var email string
 
-	err := r.cassandra.Session.Query("SELECT password, email, refresh_token FROM users WHERE username = ?", username).Scan(&password, &email, &refreshToken)
+	query := r.cassandra.Session.Query("SELECT password, email, refresh_token FROM users WHERE username = ?", username)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	err := query.Scan(&password, &email, &refreshToken)
+
 	if err != nil {
 		return user, err
 	}
@@ -47,7 +57,12 @@ func (r *Repository) FindByUsername(username string) (User, error) {
 func (r *Repository) Exists(username string) (bool, error) {
 	count := 0
 
-	err := r.cassandra.Session.Query("SELECT count(*) FROM users WHERE username = ?", username).Scan(&count)
+	query := r.cassandra.Session.Query("SELECT count(*) FROM users WHERE username = ?", username)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	err := query.Scan(&count)
+
 	if err != nil {
 		return false, err
 	}

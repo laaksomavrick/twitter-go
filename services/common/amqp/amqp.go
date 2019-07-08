@@ -33,7 +33,7 @@ type ErrorResponse struct {
 	Status  int
 }
 
-func HandleInternalServiceError(err error, data map[string]interface{}) (*OkResponse, *ErrorResponse) {
+func HandleInternalServiceError(err error, data interface{}) (*OkResponse, *ErrorResponse) {
 	logger.Error(logger.Loggable{
 		Message: err.Error(),
 		Data:    data,

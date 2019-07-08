@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"twitter-go/services/common/amqp"
+	"twitter-go/services/common/logger"
 	"twitter-go/services/gateway/internal/core"
 	"twitter-go/services/gateway/internal/users"
 )
@@ -21,6 +22,8 @@ func FollowUserHandler(s *core.Gateway) http.HandlerFunc {
 		}
 
 		followUserDto.Username = jwtUsername
+
+		logger.Info(logger.Loggable{Message: "Follow user request", Data: *followUserDto})
 
 		if err := followUserDto.Validate(); err != nil {
 			core.Error(w, http.StatusUnprocessableEntity, err.Error())

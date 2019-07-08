@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"twitter-go/services/common/amqp"
+	"twitter-go/services/common/logger"
 	"twitter-go/services/gateway/internal/core"
 	"twitter-go/services/gateway/internal/users"
 
@@ -33,6 +34,8 @@ func CreateTweetHandler(s *core.Gateway) http.HandlerFunc {
 			core.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
+
+		logger.Info(logger.Loggable{Message: "Create tweet request", Data: *createTweetDto})
 
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.CreateTweetKey, []string{createTweetDto.Username}, createTweetDto)
 
@@ -77,6 +80,8 @@ func GetAllUserTweetsHandler(s *core.Gateway) http.HandlerFunc {
 			core.Error(w, errorResponse.Status, errorResponse.Message)
 			return
 		}
+
+		logger.Info(logger.Loggable{Message: "Get all user tweets request", Data: *getAllUserTweetsDto})
 
 		// Get that user's tweets
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.GetAllUserTweetsKey, []string{getAllUserTweetsDto.Username}, getAllUserTweetsDto)

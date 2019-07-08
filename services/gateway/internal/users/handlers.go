@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"twitter-go/services/common/amqp"
+	"twitter-go/services/common/logger"
 	"twitter-go/services/gateway/internal/core"
 )
 
@@ -22,6 +23,8 @@ func CreateUserHandler(s *core.Gateway) http.HandlerFunc {
 			core.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
+
+		logger.Info(logger.Loggable{Message: "Create user request", Data: nil})
 
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.CreateUserKey, []string{}, createUserDto)
 
@@ -56,6 +59,8 @@ func AuthorizeHandler(s *core.Gateway) http.HandlerFunc {
 			core.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
+
+		logger.Info(logger.Loggable{Message: "Authorize user request", Data: nil})
 
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.AuthorizeUserKey, []string{authenticateUserDto.Username}, authenticateUserDto)
 

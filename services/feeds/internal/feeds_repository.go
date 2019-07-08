@@ -3,6 +3,7 @@ package internal
 import (
 	"time"
 	"twitter-go/services/common/cassandra"
+	"twitter-go/services/common/logger"
 
 	"github.com/gocql/gocql"
 )
@@ -23,7 +24,7 @@ func (r *Repository) GetFeed(feedUsername string) (feed Feed, err error) {
 	var content string
 	var createdAt time.Time
 
-	iter := r.cassandra.Session.Query(`
+	query := r.cassandra.Session.Query(`
 		SELECT
 			tweet_id,
 			tweet_username,
@@ -34,7 +35,11 @@ func (r *Repository) GetFeed(feedUsername string) (feed Feed, err error) {
 		WHERE 
 			username = ?`,
 		feedUsername,
-	).Iter()
+	)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	iter := query.Iter()
 
 	for iter.Scan(&id, &username, &content, &createdAt) {
 		feedItem := FeedItem{
@@ -57,14 +62,19 @@ func (r *Repository) GetFeed(feedUsername string) (feed Feed, err error) {
 }
 
 func (r *Repository) WriteToFeed(followerUsername string, item FeedItem) error {
-	err := r.cassandra.Session.Query(`
+	query := r.cassandra.Session.Query(`
 		INSERT INTO feed_items
 			(username, tweet_created_at, tweet_content, tweet_id, tweet_username)
 		VALUES
 			(?, ?, ?, ?, ?)
 	`,
 		followerUsername, item.CreatedAt, item.Content, item.ID.String(), item.Username,
-	).Exec()
+	)
+
+	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+
+	err := query.Exec()
+
 	if err != nil {
 		return err
 	}

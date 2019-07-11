@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/logger"
+	"twitter-go/services/common/types"
 	"twitter-go/services/gateway/internal/core"
-	"twitter-go/services/gateway/internal/users"
 
 	"github.com/gorilla/mux"
 )
@@ -14,11 +14,11 @@ import (
 // CreateTweetHandler provides a HandlerFunc for creating a tweet
 func CreateTweetHandler(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		createTweetDto := &CreateTweetDto{}
+		createTweetDto := types.CreateTweet{}
 		jwtUsername := core.GetUsernameFromRequest(r)
 
 		defer r.Body.Close()
-		if err := json.NewDecoder(r.Body).Decode(createTweetDto); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&createTweetDto); err != nil {
 			core.Error(w, http.StatusBadRequest, core.BadRequest)
 			return
 		}
@@ -35,7 +35,7 @@ func CreateTweetHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		logger.Info(logger.Loggable{Message: "Create tweet request", Data: *createTweetDto})
+		logger.Info(logger.Loggable{Message: "Create tweet request", Data: createTweetDto})
 
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.CreateTweetKey, []string{createTweetDto.Username}, createTweetDto)
 
@@ -60,11 +60,11 @@ func GetAllUserTweetsHandler(s *core.Gateway) http.HandlerFunc {
 		vars := mux.Vars(r)
 		username := vars["username"]
 
-		getAllUserTweetsDto := &GetAllUserTweetsDto{
+		getAllUserTweetsDto := types.GetAllUserTweets{
 			Username: username,
 		}
 
-		existsUserDto := &users.ExistsUserDto{
+		existsUserDto := types.DoesExist{
 			Username: username,
 		}
 
@@ -81,7 +81,7 @@ func GetAllUserTweetsHandler(s *core.Gateway) http.HandlerFunc {
 			return
 		}
 
-		logger.Info(logger.Loggable{Message: "Get all user tweets request", Data: *getAllUserTweetsDto})
+		logger.Info(logger.Loggable{Message: "Get all user tweets request", Data: getAllUserTweetsDto})
 
 		// Get that user's tweets
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.GetAllUserTweetsKey, []string{getAllUserTweetsDto.Username}, getAllUserTweetsDto)

@@ -3,6 +3,7 @@ package internal
 import (
 	"twitter-go/services/common/cassandra"
 	"twitter-go/services/common/logger"
+	"twitter-go/services/common/types"
 )
 
 type Repository struct {
@@ -45,7 +46,7 @@ func (r *Repository) FollowUser(username string, followingUsername string) error
 	return nil
 }
 
-func (r *Repository) GetUserFollowers(followedUsername string) (followers Followers, err error) {
+func (r *Repository) GetUserFollowers(followedUsername string) (followers types.Followers, err error) {
 	var username string
 
 	query := r.cassandra.Session.Query(`
@@ -64,7 +65,7 @@ func (r *Repository) GetUserFollowers(followedUsername string) (followers Follow
 	iter := query.Iter()
 
 	for iter.Scan(&username) {
-		follower := Follower{
+		follower := types.Follower{
 			Username: username,
 		}
 		followers = append(followers, follower)
@@ -75,7 +76,7 @@ func (r *Repository) GetUserFollowers(followedUsername string) (followers Follow
 	}
 
 	if followers == nil {
-		followers = Followers{}
+		followers = types.Followers{}
 	}
 
 	return followers, nil

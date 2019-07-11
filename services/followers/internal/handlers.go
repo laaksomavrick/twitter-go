@@ -5,11 +5,12 @@ import (
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/logger"
 	"twitter-go/services/common/service"
+	"twitter-go/services/common/types"
 )
 
 func FollowUserHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
-		var followUser FollowUser
+		var followUser types.FollowUser
 
 		if err := json.Unmarshal(msg, &followUser); err != nil {
 			return amqp.HandleInternalServiceError(err, nil)
@@ -37,7 +38,7 @@ func FollowUserHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp
 
 func GetUserFollowersHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
-		var getUserFollowers GetUserFollowers
+		var getUserFollowers types.GetUserFollowers
 
 		if err := json.Unmarshal(msg, &getUserFollowers); err != nil {
 			return amqp.HandleInternalServiceError(err, getUserFollowers)

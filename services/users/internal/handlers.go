@@ -7,12 +7,13 @@ import (
 	"twitter-go/services/common/auth"
 	"twitter-go/services/common/logger"
 	"twitter-go/services/common/service"
+	"twitter-go/services/common/types"
 )
 
 // CreateHandler handles creating a user record
 func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
-		var user User
+		var user types.User
 
 		if err := json.Unmarshal(msg, &user); err != nil {
 			return amqp.HandleInternalServiceError(err, nil)
@@ -30,7 +31,7 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 			return nil, &amqp.ErrorResponse{Message: "User already exists", Status: http.StatusConflict}
 		}
 
-		if err := user.prepareForInsert(); err != nil {
+		if err := user.PrepareForInsert(); err != nil {
 			return amqp.HandleInternalServiceError(err, user)
 		}
 
@@ -44,7 +45,7 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 		}
 
 		user.AccessToken = accessToken
-		user.sanitize()
+		user.Sanitize()
 
 		// Don't want to log user password ;)
 		logger.Info(logger.Loggable{Message: "Create user ok", Data: user})
@@ -59,7 +60,7 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 // AuthorizeHandler handles authorizing a user given their username and password
 func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
-		var authorizeDto AuthorizeDto
+		var authorizeDto types.Authorize
 
 		if err := json.Unmarshal(msg, &authorizeDto); err != nil {
 			return amqp.HandleInternalServiceError(err, nil)
@@ -80,7 +81,7 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 		}
 
 		// compare password against hash
-		if err := userRecord.compareHashAndPassword(authorizeDto.Password); err != nil {
+		if err := userRecord.CompareHashAndPassword(authorizeDto.Password); err != nil {
 			return nil, &amqp.ErrorResponse{Message: "Invalid password provided", Status: http.StatusUnprocessableEntity}
 		}
 
@@ -90,7 +91,7 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 			return amqp.HandleInternalServiceError(err, authorizeDto)
 		}
 
-		authorized := AuthorizeResponse{
+		authorized := types.Authorized{
 			RefreshToken: userRecord.RefreshToken,
 			AccessToken:  accessToken,
 		}
@@ -111,7 +112,7 @@ func AuthorizeHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 // ExistsHandler verifies a user exists in the system
 func ExistsHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
-		var existsDto ExistsDto
+		var existsDto types.DoesExist
 
 		if err := json.Unmarshal(msg, &existsDto); err != nil {
 			return amqp.HandleInternalServiceError(err, nil)
@@ -131,7 +132,7 @@ func ExistsHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 			return nil, &amqp.ErrorResponse{Message: "User not found", Status: http.StatusNotFound}
 		}
 
-		existsResponse := ExistsResponse{
+		existsResponse := types.Exists{
 			Exists: true,
 		}
 

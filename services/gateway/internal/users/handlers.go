@@ -5,16 +5,17 @@ import (
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/logger"
+	"twitter-go/services/common/types"
 	"twitter-go/services/gateway/internal/core"
 )
 
 // CreateUserHandler provides a HandlerFunc for creating a new user.
 func CreateUserHandler(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		createUserDto := &CreateUserDto{}
+		createUserDto := types.CreateUser{}
 
 		defer r.Body.Close()
-		if err := json.NewDecoder(r.Body).Decode(createUserDto); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&createUserDto); err != nil {
 			core.Error(w, http.StatusBadRequest, core.BadRequest)
 			return
 		}
@@ -47,10 +48,10 @@ func CreateUserHandler(s *core.Gateway) http.HandlerFunc {
 // AuthorizeHandler provides a HandlerFunc for the app authorization flow
 func AuthorizeHandler(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		authenticateUserDto := &AuthenticateUserDto{}
+		authenticateUserDto := types.AuthenticateUser{}
 
 		defer r.Body.Close()
-		if err := json.NewDecoder(r.Body).Decode(authenticateUserDto); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&authenticateUserDto); err != nil {
 			core.Error(w, http.StatusBadRequest, core.BadRequest)
 			return
 		}

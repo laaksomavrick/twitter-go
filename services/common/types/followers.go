@@ -1,13 +1,13 @@
-package followers
+package types
 
 import "errors"
 
-type FollowUserDto struct {
+type FollowUser struct {
 	Username          string `json:"username"`
 	FollowingUsername string `json:"followingUsername"`
 }
 
-func (dto *FollowUserDto) Validate() error {
+func (dto *FollowUser) Validate() error {
 
 	if dto.Username == "" {
 		return errors.New("username is a required field")
@@ -23,3 +23,13 @@ func (dto *FollowUserDto) Validate() error {
 
 	return nil
 }
+
+type GetUserFollowers struct {
+	Username string `json:"username"`
+}
+
+type Follower struct {
+	Username string `json:"username"`
+}
+
+type Followers []Follower

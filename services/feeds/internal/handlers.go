@@ -5,11 +5,13 @@ import (
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/logger"
 	"twitter-go/services/common/service"
+	"twitter-go/services/common/types"
 )
 
+// GetMyFeedHandler handles requests to retrieve an activty feed for a particular user
 func GetMyFeedHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
-		var getMyFeed GetMyFeed
+		var getMyFeed types.GetMyFeed
 
 		if err := json.Unmarshal(msg, &getMyFeed); err != nil {
 			return amqp.HandleInternalServiceError(err, nil)
@@ -34,9 +36,11 @@ func GetMyFeedHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.
 	}
 }
 
+// AddTweetToFeedHandler handles broadcasts to add a tweet to the feed of
+// all followers of a particular user
 func AddTweetToFeedHandler(s *service.Service) func([]byte) {
 	return func(msg []byte) {
-		var addTweetToFeed AddTweetToFeed
+		var addTweetToFeed types.AddTweetToFeed
 
 		if err := json.Unmarshal(msg, &addTweetToFeed); err != nil {
 			logger.Error(logger.Loggable{
@@ -48,7 +52,7 @@ func AddTweetToFeedHandler(s *service.Service) func([]byte) {
 		logger.Info(logger.Loggable{Message: "Adding tweet to feeds", Data: addTweetToFeed})
 
 		// find all users subscribed to tweetUsername
-		getUserFollowers := GetUserFollowers{Username: addTweetToFeed.TweetUsername}
+		getUserFollowers := types.GetUserFollowers{Username: addTweetToFeed.TweetUsername}
 
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.GetAllUserFollowers, []string{getUserFollowers.Username}, getUserFollowers)
 
@@ -60,7 +64,7 @@ func AddTweetToFeedHandler(s *service.Service) func([]byte) {
 			return
 		}
 
-		followers := Followers{}
+		followers := types.Followers{}
 
 		if err := json.Unmarshal(okResponse.Body, &followers); err != nil {
 			logger.Error(logger.Loggable{
@@ -75,7 +79,7 @@ func AddTweetToFeedHandler(s *service.Service) func([]byte) {
 		repo := NewRepository(s.Cassandra)
 
 		for _, follower := range followers {
-			feedItem := FeedItem{
+			feedItem := types.FeedItem{
 				Username:  addTweetToFeed.TweetUsername,
 				ID:        addTweetToFeed.TweetID,
 				Content:   addTweetToFeed.TweetContent,

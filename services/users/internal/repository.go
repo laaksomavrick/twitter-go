@@ -3,6 +3,7 @@ package internal
 import (
 	"twitter-go/services/common/cassandra"
 	"twitter-go/services/common/logger"
+	"twitter-go/services/common/types"
 )
 
 type Repository struct {
@@ -15,7 +16,7 @@ func NewRepository(cassandra *cassandra.Client) *Repository {
 	}
 }
 
-func (r *Repository) Insert(u User) error {
+func (r *Repository) Insert(u types.User) error {
 	query := r.cassandra.Session.Query("INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, u.RefreshToken)
 
 	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
@@ -29,8 +30,8 @@ func (r *Repository) Insert(u User) error {
 	return nil
 }
 
-func (r *Repository) FindByUsername(username string) (User, error) {
-	var user User
+func (r *Repository) FindByUsername(username string) (types.User, error) {
+	var user types.User
 	var password string
 	var refreshToken string
 	var email string

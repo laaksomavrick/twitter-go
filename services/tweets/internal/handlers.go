@@ -5,12 +5,13 @@ import (
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/logger"
 	"twitter-go/services/common/service"
+	"twitter-go/services/common/types"
 )
 
 // CreateHandler handles creating a tweet record
 func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
-		var tweet Tweet
+		var tweet types.Tweet
 
 		if err := json.Unmarshal(msg, &tweet); err != nil {
 			return amqp.HandleInternalServiceError(err, nil)
@@ -18,7 +19,7 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 
 		logger.Info(logger.Loggable{Message: "Creating tweet", Data: tweet})
 
-		tweet.prepareForInsert()
+		tweet.PrepareForInsert()
 
 		repo := NewRepository(s.Cassandra)
 		if err := repo.Insert(tweet); err != nil {
@@ -40,7 +41,7 @@ func CreateHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.Err
 // GetAllHandler handles returning all tweets for a given username
 func GetAllHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
-		var req GetAllUserTweets
+		var req types.GetAllUserTweets
 
 		if err := json.Unmarshal(msg, &req); err != nil {
 			return amqp.HandleInternalServiceError(err, req)

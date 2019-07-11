@@ -4,6 +4,7 @@ import (
 	"time"
 	"twitter-go/services/common/cassandra"
 	"twitter-go/services/common/logger"
+	"twitter-go/services/common/types"
 
 	"github.com/gocql/gocql"
 )
@@ -21,7 +22,7 @@ func NewRepository(cassandra *cassandra.Client) *Repository {
 }
 
 // Insert creates tweet records to all relevant tables
-func (r *Repository) Insert(t Tweet) error {
+func (r *Repository) Insert(t types.Tweet) error {
 	query := r.cassandra.Session.Query("INSERT INTO tweets (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content)
 
 	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
@@ -46,7 +47,7 @@ func (r *Repository) Insert(t Tweet) error {
 }
 
 // GetAll returns all tweets for the given username
-func (r *Repository) GetAll(username string) (tweets []Tweet, err error) {
+func (r *Repository) GetAll(username string) (tweets []types.Tweet, err error) {
 	var id gocql.UUID
 	var content string
 	var createdAt time.Time
@@ -58,7 +59,7 @@ func (r *Repository) GetAll(username string) (tweets []Tweet, err error) {
 	iter := query.Iter()
 
 	for iter.Scan(&id, &username, &content, &createdAt) {
-		tweet := Tweet{
+		tweet := types.Tweet{
 			ID:        id,
 			Username:  username,
 			Content:   content,
@@ -73,7 +74,7 @@ func (r *Repository) GetAll(username string) (tweets []Tweet, err error) {
 
 	// if none found, make it an empty array
 	if tweets == nil {
-		tweets = []Tweet{}
+		tweets = []types.Tweet{}
 	}
 
 	return tweets, nil

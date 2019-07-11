@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/logger"
+	"twitter-go/services/common/types"
 	"twitter-go/services/gateway/internal/core"
 )
 
@@ -13,9 +14,9 @@ func GetMyFeedHandler(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jwtUsername := core.GetUsernameFromRequest(r)
 
-		getFeedDto := &GetFeedDto{Username: jwtUsername}
+		getFeedDto := types.GetMyFeed{Username: jwtUsername}
 
-		logger.Info(logger.Loggable{Message: "Getting user feed", Data: *getFeedDto})
+		logger.Info(logger.Loggable{Message: "Getting user feed", Data: getFeedDto})
 
 		okResponse, errorResponse := s.Amqp.DirectRequest(amqp.GetMyFeedKey, []string{getFeedDto.Username}, getFeedDto)
 

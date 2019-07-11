@@ -5,32 +5,32 @@ import (
 	"net/http"
 	"twitter-go/services/common/amqp"
 	"twitter-go/services/common/logger"
+	"twitter-go/services/common/types"
 	"twitter-go/services/gateway/internal/core"
-	"twitter-go/services/gateway/internal/users"
 )
 
 // FollowUserHandler provides a HandlerFunc for following a user
 func FollowUserHandler(s *core.Gateway) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jwtUsername := core.GetUsernameFromRequest(r)
-		followUserDto := &FollowUserDto{}
+		followUserDto := types.FollowUser{}
 
 		defer r.Body.Close()
-		if err := json.NewDecoder(r.Body).Decode(followUserDto); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&followUserDto); err != nil {
 			core.Error(w, http.StatusBadRequest, core.BadRequest)
 			return
 		}
 
 		followUserDto.Username = jwtUsername
 
-		logger.Info(logger.Loggable{Message: "Follow user request", Data: *followUserDto})
+		logger.Info(logger.Loggable{Message: "Follow user request", Data: followUserDto})
 
 		if err := followUserDto.Validate(); err != nil {
 			core.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
-		existsUserDto := &users.ExistsUserDto{
+		existsUserDto := types.DoesExist{
 			Username: followUserDto.FollowingUsername,
 		}
 

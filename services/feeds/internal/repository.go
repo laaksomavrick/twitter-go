@@ -4,6 +4,7 @@ import (
 	"time"
 	"twitter-go/services/common/cassandra"
 	"twitter-go/services/common/logger"
+	"twitter-go/services/common/types"
 
 	"github.com/gocql/gocql"
 )
@@ -18,7 +19,7 @@ func NewRepository(cassandra *cassandra.Client) *Repository {
 	}
 }
 
-func (r *Repository) GetFeed(feedUsername string) (feed Feed, err error) {
+func (r *Repository) GetFeed(feedUsername string) (feed types.Feed, err error) {
 	var id gocql.UUID
 	var username string
 	var content string
@@ -42,7 +43,7 @@ func (r *Repository) GetFeed(feedUsername string) (feed Feed, err error) {
 	iter := query.Iter()
 
 	for iter.Scan(&id, &username, &content, &createdAt) {
-		feedItem := FeedItem{
+		feedItem := types.FeedItem{
 			ID:        id,
 			Username:  username,
 			Content:   content,
@@ -55,13 +56,13 @@ func (r *Repository) GetFeed(feedUsername string) (feed Feed, err error) {
 	}
 
 	if feed == nil {
-		feed = Feed{}
+		feed = types.Feed{}
 	}
 
 	return feed, nil
 }
 
-func (r *Repository) WriteToFeed(followerUsername string, item FeedItem) error {
+func (r *Repository) WriteToFeed(followerUsername string, item types.FeedItem) error {
 	query := r.cassandra.Session.Query(`
 		INSERT INTO feed_items
 			(username, tweet_created_at, tweet_content, tweet_id, tweet_username)

@@ -1,14 +1,17 @@
-package users
+package types
 
 import (
 	"errors"
 	"regexp"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var rxEmail = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 // CreateUserDto defines the shape of the dto used to create a new user
-type CreateUserDto struct {
+type CreateUser struct {
 	Username             string `json:"username"`
 	Password             string `json:"password"`
 	PasswordConfirmation string `json:"passwordConfirmation"`
@@ -17,7 +20,7 @@ type CreateUserDto struct {
 }
 
 // Validate validates that the dto is well formed for entry into the system
-func (dto *CreateUserDto) Validate() error {
+func (dto *CreateUser) Validate() error {
 
 	if dto.Username == "" {
 		return errors.New("username is a required field")
@@ -59,13 +62,13 @@ func (dto *CreateUserDto) Validate() error {
 }
 
 // AuthenticateUserDto defines the shape of the dto used to authenticate a user
-type AuthenticateUserDto struct {
+type AuthenticateUser struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
 // Validate validates that the dto is well formed for entry into the system
-func (dto *AuthenticateUserDto) Validate() error {
+func (dto *AuthenticateUser) Validate() error {
 
 	if dto.Username == "" {
 		return errors.New("username is a required field")
@@ -78,6 +81,54 @@ func (dto *AuthenticateUserDto) Validate() error {
 	return nil
 }
 
-type ExistsUserDto struct {
+type ExistsUser struct {
 	Username string `json:"username"`
+}
+
+type User struct {
+	Username     string `json:"username"`
+	Email        string `json:"email"`
+	Password     string `json:",omitempty"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
+func (u *User) PrepareForInsert() error {
+	password := []byte(u.Password)
+	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	refreshToken := uuid.New().String()
+	u.Password = string(hashedPassword)
+	u.RefreshToken = refreshToken
+	return nil
+}
+
+func (u *User) Sanitize() {
+	u.Password = ""
+}
+
+func (u *User) CompareHashAndPassword(password string) error {
+	p := []byte(password)
+	hp := []byte(u.Password)
+	return bcrypt.CompareHashAndPassword(hp, p)
+}
+
+type Authorize struct {
+	Username string `json:"username"`
+	Password string `json:",omitempty"`
+}
+
+type Authorized struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
+type DoesExist struct {
+	Username string `json:"username"`
+}
+
+type Exists struct {
+	Exists bool `json:"exists"`
 }

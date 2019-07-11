@@ -6,7 +6,7 @@ import (
 	"twitter-go/services/common/types"
 )
 
-// Repository is the feed service's wrapper around database access
+// Repository is the user service's wrapper around database access
 type Repository struct {
 	service.Repository
 }

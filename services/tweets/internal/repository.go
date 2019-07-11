@@ -9,7 +9,7 @@ import (
 	"github.com/gocql/gocql"
 )
 
-// Repository is the feed service's wrapper around database access
+// Repository is the tweet service's wrapper around database access
 type Repository struct {
 	service.Repository
 }

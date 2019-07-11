@@ -4,7 +4,7 @@ import (
 	"github.com/gocql/gocql"
 )
 
-// TODO-7: handle disconnects from cassandra
+// TODO: handle disconnects from cassandra
 
 // Client represents an active session (connection) to a particular cassandra cluster
 type Client struct {

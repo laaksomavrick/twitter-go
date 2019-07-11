@@ -83,6 +83,7 @@ func convertDataToMap(data interface{}) map[string]interface{} {
 
 	if klass == reflect.String {
 		// TODO fix this for queries
+		// Currently making logs for query strings ugly
 		strings.Replace(data.(string), "\n", "", -1)
 		data = map[string]interface{}{"data": data}
 	}

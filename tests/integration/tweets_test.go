@@ -19,7 +19,7 @@ type TweetsTestSuite struct {
 }
 
 func (suite *TweetsTestSuite) SetupSuite() {
-	// TODO-13: have this be set by an ENV when k8s is up; test against k8s
+	// TODO: have this be set by an ENV when k8s is up; test against k8s
 	// Will need to create a new keyspace + tables for above use case to not blow up prod?
 	suite.Init("localhost", "3002")
 	suite.Truncate([]string{"users", "tweets", "tweets_by_user"})

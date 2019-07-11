@@ -29,9 +29,7 @@ func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
 func CheckAuthentication(authRequired bool, hmacSecret []byte) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-
-			// TODO-14: auth enabled flag
-
+			// TODO: flag to disable for dev
 			// check if route is guarded by require auth
 			if authRequired == false {
 				f(w, r)

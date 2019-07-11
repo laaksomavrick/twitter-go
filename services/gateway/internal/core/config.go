@@ -32,13 +32,7 @@ func NewConfig() *GatewayConfig {
 	}
 
 	if os.Getenv("HMAC_SECRET") == "" {
-		// TODO-5: real hmac secret; read from file
-		// -> put hmacSecret in config
-		// if keyData, e := ioutil.ReadFile("test/hmacTestKey"); e == nil {
-		// 	hmacSampleSecret = keyData
-		// } else {
-		// 	panic(e)
-		// }
+		// TODO: real hmac secret in helm/ENV
 		os.Setenv("HMAC_SECRET", "hmacsecret")
 	}
 

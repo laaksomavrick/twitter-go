@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"twitter-go/services/common/logger"
 
 	"github.com/google/uuid"
@@ -12,8 +13,6 @@ import (
 )
 
 const exchange = "twtr"
-
-// TODO-6: handle disconnects from rmqp
 
 // Client wraps common amqp operations
 type Client struct {
@@ -33,6 +32,8 @@ type ErrorResponse struct {
 	Status  int
 }
 
+// HandleInternalServiceError handles an internal error in the system in a uniform way,
+// returning an error response
 func HandleInternalServiceError(err error, data interface{}) (*OkResponse, *ErrorResponse) {
 	logger.Error(logger.Loggable{
 		Message: err.Error(),
@@ -61,6 +62,18 @@ func NewClient(url string) (*Client, error) {
 	if err != nil {
 		return nil, errors.New("Failed to open a channel in RabbitMQ")
 	}
+
+	// Setup for an onClose event handler
+	onClose := make(chan *amqp.Error)
+
+	go func() {
+		for range onClose {
+			logger.Error(logger.Loggable{Message: "Lost connection to rabbitmq, dieing..."})
+			os.Exit(1)
+		}
+	}()
+
+	conn.NotifyClose(onClose)
 
 	delivery, err := ch.Consume(
 		"amq.rabbitmq.reply-to", // queue

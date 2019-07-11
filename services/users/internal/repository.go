@@ -2,24 +2,27 @@ package internal
 
 import (
 	"twitter-go/services/common/cassandra"
-	"twitter-go/services/common/logger"
+	"twitter-go/services/common/service"
 	"twitter-go/services/common/types"
 )
 
+// Repository is the feed service's wrapper around database access
 type Repository struct {
-	cassandra *cassandra.Client
+	service.Repository
 }
 
+// NewRepository constructs a new repository
 func NewRepository(cassandra *cassandra.Client) *Repository {
 	return &Repository{
-		cassandra: cassandra,
+		service.Repository{
+			Cassandra: cassandra,
+		},
 	}
 }
 
+// Insert writes a new user to the database
 func (r *Repository) Insert(u types.User) error {
-	query := r.cassandra.Session.Query("INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, u.RefreshToken)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+	query := r.Query("INSERT INTO users (username, email, password, refresh_token) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, u.RefreshToken)
 
 	err := query.Exec()
 
@@ -30,15 +33,14 @@ func (r *Repository) Insert(u types.User) error {
 	return nil
 }
 
+// FindByUsername retrieves a user record by username
 func (r *Repository) FindByUsername(username string) (types.User, error) {
 	var user types.User
 	var password string
 	var refreshToken string
 	var email string
 
-	query := r.cassandra.Session.Query("SELECT password, email, refresh_token FROM users WHERE username = ?", username)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+	query := r.Query("SELECT password, email, refresh_token FROM users WHERE username = ?", username)
 
 	err := query.Scan(&password, &email, &refreshToken)
 
@@ -58,9 +60,7 @@ func (r *Repository) FindByUsername(username string) (types.User, error) {
 func (r *Repository) Exists(username string) (bool, error) {
 	count := 0
 
-	query := r.cassandra.Session.Query("SELECT count(*) FROM users WHERE username = ?", username)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+	query := r.Query("SELECT count(*) FROM users WHERE username = ?", username)
 
 	err := query.Scan(&count)
 

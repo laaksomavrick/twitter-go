@@ -6,11 +6,13 @@ import (
 
 // TODO-7: handle disconnects from cassandra
 
+// Client represents an active session (connection) to a particular cassandra cluster
 type Client struct {
 	cluster *gocql.ClusterConfig
 	Session *gocql.Session
 }
 
+// NewClient synchronously constructs a cassandra.Client
 func NewClient(host string, keyspace string) (*Client, error) {
 	cluster := gocql.NewCluster(host)
 	cluster.Keyspace = keyspace

@@ -3,29 +3,34 @@ package internal
 import (
 	"time"
 	"twitter-go/services/common/cassandra"
-	"twitter-go/services/common/logger"
+	"twitter-go/services/common/service"
 	"twitter-go/services/common/types"
 
 	"github.com/gocql/gocql"
 )
 
+// Repository is the feed service's wrapper around database access
 type Repository struct {
-	cassandra *cassandra.Client
+	service.Repository
 }
 
+// NewRepository constructs a new repository
 func NewRepository(cassandra *cassandra.Client) *Repository {
 	return &Repository{
-		cassandra: cassandra,
+		service.Repository{
+			Cassandra: cassandra,
+		},
 	}
 }
 
+// GetFeed retrieves the feed of tweets for a particular user
 func (r *Repository) GetFeed(feedUsername string) (feed types.Feed, err error) {
 	var id gocql.UUID
 	var username string
 	var content string
 	var createdAt time.Time
 
-	query := r.cassandra.Session.Query(`
+	query := r.Query(`
 		SELECT
 			tweet_id,
 			tweet_username,
@@ -37,8 +42,6 @@ func (r *Repository) GetFeed(feedUsername string) (feed types.Feed, err error) {
 			username = ?`,
 		feedUsername,
 	)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
 
 	iter := query.Iter()
 
@@ -62,8 +65,9 @@ func (r *Repository) GetFeed(feedUsername string) (feed types.Feed, err error) {
 	return feed, nil
 }
 
+// WriteToFeed writes a feed item to a particular user's feed
 func (r *Repository) WriteToFeed(followerUsername string, item types.FeedItem) error {
-	query := r.cassandra.Session.Query(`
+	query := r.Query(`
 		INSERT INTO feed_items
 			(username, tweet_created_at, tweet_content, tweet_id, tweet_username)
 		VALUES
@@ -71,8 +75,6 @@ func (r *Repository) WriteToFeed(followerUsername string, item types.FeedItem) e
 	`,
 		followerUsername, item.CreatedAt, item.Content, item.ID.String(), item.Username,
 	)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
 
 	err := query.Exec()
 

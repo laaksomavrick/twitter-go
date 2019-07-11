@@ -19,6 +19,8 @@ twtr.feed_items (
 );
 ```
 
+
 #### Access patterns
 
-TODO
+- Retrieve a user's feed
+- Write a tweet to all relevant feeds

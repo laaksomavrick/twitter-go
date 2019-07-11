@@ -7,11 +7,13 @@ import (
 	"github.com/gocql/gocql"
 )
 
+// CreateTweet defines the shape of a request to create a tweet
 type CreateTweet struct {
 	Username string
 	Content  string `json:"content"`
 }
 
+// Validate validates the create tweet request
 func (dto *CreateTweet) Validate() error {
 	if dto.Username == "" {
 		return errors.New("username is a required field")
@@ -24,10 +26,12 @@ func (dto *CreateTweet) Validate() error {
 	return nil
 }
 
+// GetAllUserTweets defines the shape of a request to get all tweets made by a particular user
 type GetAllUserTweets struct {
 	Username string `json:"username"`
 }
 
+// Validate valides the get all user tweets request
 func (dto *GetAllUserTweets) Validate() error {
 	if dto.Username == "" {
 		return errors.New("username is a required field")
@@ -44,6 +48,8 @@ type Tweet struct {
 	Content   string     `json:"content"`
 }
 
+// PrepareForInsert prepares a tweet to be inserted to the database,
+// setting the ID and createdAt fields (cassandra grants us very little ;)
 func (tweet *Tweet) PrepareForInsert() {
 	tweet.ID, _ = gocql.RandomUUID()
 	tweet.CreatedAt = time.Now().UTC()

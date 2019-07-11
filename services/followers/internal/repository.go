@@ -2,27 +2,30 @@ package internal
 
 import (
 	"twitter-go/services/common/cassandra"
-	"twitter-go/services/common/logger"
+	"twitter-go/services/common/service"
 	"twitter-go/services/common/types"
 )
 
+// Repository is the followers service's wrapper around database access
 type Repository struct {
-	cassandra *cassandra.Client
+	service.Repository
 }
 
+// NewRepository constructs a new repository
 func NewRepository(cassandra *cassandra.Client) *Repository {
 	return &Repository{
-		cassandra: cassandra,
+		service.Repository{
+			Cassandra: cassandra,
+		},
 	}
 }
 
+// FollowUser registeres a follower and followee in the database, for two particular users
 func (r *Repository) FollowUser(username string, followingUsername string) error {
-	query := r.cassandra.Session.Query(
+	query := r.Query(
 		"INSERT INTO user_followings (username, following_username) VALUES (?, ?)",
 		username, followingUsername,
 	)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
 
 	err := query.Exec()
 
@@ -30,12 +33,10 @@ func (r *Repository) FollowUser(username string, followingUsername string) error
 		return err
 	}
 
-	query = r.cassandra.Session.Query(
+	query = r.Query(
 		"INSERT INTO user_followers (username, follower_username) VALUES (?, ?)",
 		followingUsername, username,
 	)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
 
 	err = query.Exec()
 
@@ -46,10 +47,11 @@ func (r *Repository) FollowUser(username string, followingUsername string) error
 	return nil
 }
 
+// GetUserFollowers retrieves all the usernames of a user's followers
 func (r *Repository) GetUserFollowers(followedUsername string) (followers types.Followers, err error) {
 	var username string
 
-	query := r.cassandra.Session.Query(`
+	query := r.Query(`
 		SELECT
 			follower_username
 		FROM
@@ -59,8 +61,6 @@ func (r *Repository) GetUserFollowers(followedUsername string) (followers types.
 	`,
 		followedUsername,
 	)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
 
 	iter := query.Iter()
 

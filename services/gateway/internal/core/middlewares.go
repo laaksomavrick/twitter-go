@@ -73,7 +73,7 @@ func LogRequest(name string) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			lw := HttpLogWriter{ResponseWriter: w}
+			lw := HTTPLogWriter{ResponseWriter: w}
 			f(&lw, r)
 			duration := time.Since(start)
 			username := r.Context().Value("username")

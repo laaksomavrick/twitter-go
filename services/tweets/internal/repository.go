@@ -3,29 +3,29 @@ package internal
 import (
 	"time"
 	"twitter-go/services/common/cassandra"
-	"twitter-go/services/common/logger"
+	"twitter-go/services/common/service"
 	"twitter-go/services/common/types"
 
 	"github.com/gocql/gocql"
 )
 
-// Repository provides an abstraction over database logic for common operations
+// Repository is the feed service's wrapper around database access
 type Repository struct {
-	cassandra *cassandra.Client
+	service.Repository
 }
 
-// NewRepository return an instantiated repository
+// NewRepository constructs a new repository
 func NewRepository(cassandra *cassandra.Client) *Repository {
 	return &Repository{
-		cassandra: cassandra,
+		service.Repository{
+			Cassandra: cassandra,
+		},
 	}
 }
 
 // Insert creates tweet records to all relevant tables
 func (r *Repository) Insert(t types.Tweet) error {
-	query := r.cassandra.Session.Query("INSERT INTO tweets (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+	query := r.Query("INSERT INTO tweets (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content)
 
 	err := query.Exec()
 
@@ -33,9 +33,7 @@ func (r *Repository) Insert(t types.Tweet) error {
 		return err
 	}
 
-	query = r.cassandra.Session.Query("INSERT INTO tweets_by_user (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+	query = r.Query("INSERT INTO tweets_by_user (id, username, created_at, content) VALUES (?, ?, ?, ?)", t.ID.String(), t.Username, t.CreatedAt, t.Content)
 
 	err = query.Exec()
 
@@ -52,9 +50,7 @@ func (r *Repository) GetAll(username string) (tweets []types.Tweet, err error) {
 	var content string
 	var createdAt time.Time
 
-	query := r.cassandra.Session.Query("SELECT id, username, content, created_at FROM tweets_by_user WHERE username = ?", username)
-
-	logger.Info(logger.Loggable{Message: "Executing query", Data: query.String()})
+	query := r.Query("SELECT id, username, content, created_at FROM tweets_by_user WHERE username = ?", username)
 
 	iter := query.Iter()
 

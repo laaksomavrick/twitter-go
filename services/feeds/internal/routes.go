@@ -13,6 +13,7 @@ var Repliers = service.Repliers{
 	},
 }
 
+// Consumers maps routing keys to consumers
 var Consumers = service.Consumers{
 	service.Consumer{
 		RoutingKey: amqp.CreatedTweetKey,

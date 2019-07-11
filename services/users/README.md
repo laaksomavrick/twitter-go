@@ -17,4 +17,4 @@ The users service provides an interface for creating and authenticating accounts
 
 - Create a new user
 - Retrieve or issue a user's access token via a "login" (username and password)
-- _todo_ Retrieve or issue a user's access token via a refresh token
+- TODO: Retrieve or issue a user's access token via a refresh token

@@ -10,7 +10,7 @@ import (
 
 var rxEmail = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
-// CreateUserDto defines the shape of the dto used to create a new user
+// CreateUser defines the shape of the dto used to create a new user
 type CreateUser struct {
 	Username             string `json:"username"`
 	Password             string `json:"password"`
@@ -61,7 +61,7 @@ func (dto *CreateUser) Validate() error {
 	return nil
 }
 
-// AuthenticateUserDto defines the shape of the dto used to authenticate a user
+// AuthenticateUser defines the shape of the dto used to authenticate a user
 type AuthenticateUser struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -81,10 +81,12 @@ func (dto *AuthenticateUser) Validate() error {
 	return nil
 }
 
+// ExistsUser defines the shape of a request to check whether a user exists or not
 type ExistsUser struct {
 	Username string `json:"username"`
 }
 
+// User defines the shape of a user in the database
 type User struct {
 	Username     string `json:"username"`
 	Email        string `json:"email"`
@@ -93,6 +95,8 @@ type User struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
+// PrepareForInsert sets derived properties pre database insertion, e.g hashing the set password and initializing
+// a new refresh token
 func (u *User) PrepareForInsert() error {
 	password := []byte(u.Password)
 	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
@@ -105,30 +109,36 @@ func (u *User) PrepareForInsert() error {
 	return nil
 }
 
+// Sanitize sanitizes a user for reads. We don't want passwords being sent back directly or output in logs
 func (u *User) Sanitize() {
 	u.Password = ""
 }
 
+// CompareHashAndPassword checks whether a hash matches a password. Used for authentication.
 func (u *User) CompareHashAndPassword(password string) error {
 	p := []byte(password)
 	hp := []byte(u.Password)
 	return bcrypt.CompareHashAndPassword(hp, p)
 }
 
+// Authorize defines the shape of a request to authorize a user
 type Authorize struct {
 	Username string `json:"username"`
 	Password string `json:",omitempty"`
 }
 
+// Authorized defines the shape of a response to authorize a user
 type Authorized struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 }
 
+// DoesExist defines the shape of a request to check whether a user exists or not
 type DoesExist struct {
 	Username string `json:"username"`
 }
 
+// Exists defines the shape of a response to whether or not a user exists
 type Exists struct {
 	Exists bool `json:"exists"`
 }

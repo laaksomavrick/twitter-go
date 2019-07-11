@@ -8,6 +8,7 @@ import (
 	"twitter-go/services/common/types"
 )
 
+// FollowUserHandler handles requests to follow a user
 func FollowUserHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 		var followUser types.FollowUser
@@ -36,6 +37,7 @@ func FollowUserHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp
 	}
 }
 
+// GetUserFollowersHandler handles requests to retrieve all followers of a user
 func GetUserFollowersHandler(s *service.Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 	return func(msg []byte) (*amqp.OkResponse, *amqp.ErrorResponse) {
 		var getUserFollowers types.GetUserFollowers

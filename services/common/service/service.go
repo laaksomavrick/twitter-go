@@ -13,24 +13,33 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// ReplyFunc defines the shape of a handler for a rpc request
 type ReplyFunc func(s *Service) func([]byte) (*amqp.OkResponse, *amqp.ErrorResponse)
 
+// Repliers is an array of Repliers
 type Repliers []Replier
 
+// Replier defines the shape of a replier, associating a routing key to a handler which
+// will issue a reply to incoming requests
 type Replier struct {
 	RoutingKey string
 	Handler    ReplyFunc
 }
 
+// ConsumeFunc defines the shape of a handler for a broadcasted message
 type ConsumeFunc func(s *Service) func([]byte)
 
+// Consumers is an array of Consumers
 type Consumers []Consumer
 
+// Consumer defines the shape of a consumer, associating a routing key to a handler which
+// handle an incoming request without replying
 type Consumer struct {
 	RoutingKey string
 	Handler    ConsumeFunc
 }
 
+// Service defines the common components of most microservices in the backend
 type Service struct {
 	Name      string
 	Config    *config.ServiceConfig
@@ -38,6 +47,7 @@ type Service struct {
 	Cassandra *cassandra.Client
 }
 
+// NewService constructs a new service
 func NewService(name string, amqp *amqp.Client, cassandra *cassandra.Client, config *config.ServiceConfig) *Service {
 	return &Service{
 		Name:      name,
@@ -47,6 +57,7 @@ func NewService(name string, amqp *amqp.Client, cassandra *cassandra.Client, con
 	}
 }
 
+// Init initializes the service, wiring repliers and consumers alongside serving metrics and health checks
 func (s *Service) Init(repliers Repliers, consumers Consumers) {
 	s.wire(repliers, consumers)
 	s.serve()

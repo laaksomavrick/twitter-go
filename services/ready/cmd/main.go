@@ -60,4 +60,5 @@ func main() {
 	}
 
 	log.Fatal("Failed to establish both connections, exiting")
+	os.Exit(1)
 }
